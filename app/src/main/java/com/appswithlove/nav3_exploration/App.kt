@@ -15,6 +15,7 @@ import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -41,6 +42,10 @@ val bottombarItems = listOf(Home, Profile)
 fun App() {
     val backStack = rememberNavBackStack(Home)
 
+    LaunchedEffect(backStack.toList()) {
+        println("Backstack changed: $backStack")
+    }
+
 
     val sceneStrategy = remember {
         AdaptiveTwoPaneStrategy<Any>(
@@ -48,10 +53,12 @@ fun App() {
                 BottomBar(
                     selected = backStack.lastOrNull(),
                     navigate = {
-                        if (backStack.lastOrNull() != it && backStack.lastOrNull() in bottombarItems && backStack.lastOrNull() != Home) {
+                        if (backStack.lastOrNull() != it && backStack.lastOrNull() in bottombarItems) {
                             backStack.removeAt(backStack.lastIndex)
                         }
-                        backStack.add(it)
+                        if (!backStack.contains(it)) {
+                            backStack.add(it)
+                        }
                     })
             }
         )
