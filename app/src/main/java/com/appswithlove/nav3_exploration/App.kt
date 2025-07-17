@@ -1,5 +1,11 @@
 package com.appswithlove.nav3_exploration
 
+import androidx.compose.animation.ContentTransform
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.scaleIn
+import androidx.compose.animation.scaleOut
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -15,7 +21,6 @@ import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -36,23 +41,20 @@ object HomeDetail : NavKey
 @Serializable
 data object Profile : NavKey
 
+@Serializable
+data object Overlay : NavKey
+
 val bottombarItems = listOf(Home, Profile)
 
 @Composable
 fun App() {
     val backStack = rememberNavBackStack(Home)
 
-    LaunchedEffect(backStack.toList()) {
-        println("Backstack changed: $backStack")
-    }
-
-
     val sceneStrategy = remember {
         AdaptiveTwoPaneStrategy<Any>(
             bottomBar = {
                 BottomBar(
-                    selected = backStack.lastOrNull(),
-                    navigate = {
+                    selected = backStack.lastOrNull(), navigate = {
                         if (backStack.lastOrNull() != it && backStack.lastOrNull() in bottombarItems) {
                             backStack.removeAt(backStack.lastIndex)
                         }
@@ -60,59 +62,121 @@ fun App() {
                             backStack.add(it)
                         }
                     })
-            }
-        )
+            }).then(OverlaySceneStrategy())
     }
 
-    NavDisplay(
-        backStack = backStack,
-        entryProvider = entryProvider {
-            entry<Home>(metadata = mapOf(KEY_TWO_PANE to true, KEY_BOTTOM_BAR to true)) {
-                Screen(
-                    "Home",
-                    openDetail = {
-                        if (backStack.lastOrNull() == HomeDetail) {
-                            backStack.removeAt(backStack.lastIndex)
-                        }
-                        backStack.add(HomeDetail)
-                    },
-                    modifier = Modifier.background(color = MaterialTheme.colorScheme.primaryContainer)
+    NavDisplay(backStack = backStack, entryProvider = entryProvider {
+        entry<Home>(
+            metadata = mapOf(
+                KEY_TWO_PANE to true,
+                KEY_BOTTOM_BAR to true
+            ) + NavDisplay.transitionSpec {
+                ContentTransform(
+                    targetContentEnter = fadeIn(animationSpec = tween(200)),
+                    initialContentExit = fadeOut(animationSpec = tween(200))
                 )
-            }
+            } + NavDisplay.popTransitionSpec {
+                ContentTransform(
+                    targetContentEnter = fadeIn(animationSpec = tween(200)),
+                    initialContentExit = fadeOut(animationSpec = tween(200))
+                )
+            }) {
+            Screen(
+                "Home",
+                openDetail = {
+                    if (backStack.lastOrNull() == HomeDetail) {
+                        backStack.removeAt(backStack.lastIndex)
+                    }
+                    backStack.add(HomeDetail)
+                },
+                openDialog = { backStack.add(Overlay) },
+                modifier = Modifier.background(color = MaterialTheme.colorScheme.primaryContainer)
+            )
+        }
 
-            entry<HomeDetail>(metadata = mapOf(KEY_TWO_PANE to true)) {
-                DetailScreen(
-                    "Detail",
-                    back = { backStack.removeAt(backStack.lastIndex) },
-                    modifier = Modifier.background(color = MaterialTheme.colorScheme.primaryContainer)
-                )
-            }
+        entry<HomeDetail>(metadata = mapOf(KEY_TWO_PANE to true)) {
+            DetailScreen(
+                "Detail",
+                back = { backStack.removeAt(backStack.lastIndex) },
+                modifier = Modifier.background(color = MaterialTheme.colorScheme.primaryContainer)
+            )
+        }
 
-            entry<Profile>(metadata = mapOf(KEY_BOTTOM_BAR to true)) {
-                Screen(
-                    "Profile",
-                    openDetail = {
-                        if (backStack.lastOrNull() == HomeDetail) {
-                            backStack.removeAt(backStack.lastIndex)
-                        }
-                        backStack.add(HomeDetail)
-                    },
-                    modifier = Modifier.background(color = MaterialTheme.colorScheme.secondaryContainer)
-                )
+        entry<Overlay>(metadata = OverlaySceneStrategy.overlay()) {
+            Column {
+                Text("Overlay")
+                Button(onClick = { backStack.removeAt(backStack.lastIndex) }) {
+                    Text("Close")
+                }
             }
-        },
-        sceneStrategy = sceneStrategy
-    )
+        }
+
+        entry<Profile>(metadata = mapOf(KEY_BOTTOM_BAR to true) + NavDisplay.transitionSpec {
+            ContentTransform(
+                targetContentEnter = fadeIn(animationSpec = tween(200)),
+                initialContentExit = fadeOut(animationSpec = tween(200))
+            )
+        } + NavDisplay.popTransitionSpec {
+            ContentTransform(
+                targetContentEnter = fadeIn(animationSpec = tween(200)),
+                initialContentExit = fadeOut(animationSpec = tween(200))
+            )
+        }) {
+            Screen(
+                "Profile",
+                openDetail = {
+                    if (backStack.lastOrNull() == HomeDetail) {
+                        backStack.removeAt(backStack.lastIndex)
+                    }
+                    backStack.add(HomeDetail)
+                },
+                openDialog = { backStack.add(Overlay) },
+                modifier = Modifier.background(color = MaterialTheme.colorScheme.secondaryContainer)
+            )
+        }
+    }, sceneStrategy = sceneStrategy, transitionSpec = {
+        ContentTransform(
+            targetContentEnter = scaleIn(
+                animationSpec = tween(150), initialScale = 0.8f
+            ) + fadeIn(
+                animationSpec = tween(150)
+            ), initialContentExit = scaleOut(
+                animationSpec = tween(150), targetScale = 1.1f
+            ) + fadeOut(
+                animationSpec = tween(150)
+            )
+        )
+    }, popTransitionSpec = {
+        ContentTransform(
+            targetContentEnter = scaleIn(
+                animationSpec = tween(150), initialScale = 1.1f
+            ) + fadeIn(
+                animationSpec = tween(150)
+            ), initialContentExit = scaleOut(
+                animationSpec = tween(150), targetScale = 0.8f
+            ) + fadeOut(
+                animationSpec = tween(150)
+            )
+        )
+    })
 }
 
 @Composable
-private fun Screen(title: String = "Home", openDetail: () -> Unit, modifier: Modifier = Modifier) {
+private fun Screen(
+    title: String = "Home",
+    openDetail: () -> Unit,
+    openDialog: () -> Unit,
+    modifier: Modifier = Modifier
+) {
     Surface(modifier = modifier.fillMaxSize()) {
         Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
             Column(horizontalAlignment = Alignment.CenterHorizontally) {
                 Text(title)
                 Button(onClick = openDetail) {
                     Text("Open Detail")
+                }
+                Button(onClick = openDialog) {
+                    Text("Open Dialog")
                 }
             }
         }
@@ -138,15 +202,11 @@ fun BottomBar(selected: NavKey?, navigate: (NavKey) -> Unit, modifier: Modifier 
     NavigationBar(modifier = modifier) {
         bottombarItems.forEach { destination ->
 
-            NavigationBarItem(
-                icon = {
-                    Icon(
-                        imageVector = Icons.Filled.Home,
-                        contentDescription = null
-                    )
-                },
-                selected = destination == selected,
-                onClick = { navigate(destination) })
+            NavigationBarItem(icon = {
+                Icon(
+                    imageVector = Icons.Filled.Home, contentDescription = null
+                )
+            }, selected = destination == selected, onClick = { navigate(destination) })
         }
     }
 }

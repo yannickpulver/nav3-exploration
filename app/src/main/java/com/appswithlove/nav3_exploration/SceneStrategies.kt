@@ -107,8 +107,12 @@ class AdaptiveTwoPaneStrategy<T : Any>(
         onBack: (Int) -> Unit
     ): Scene<T>? {
         if (entries.isEmpty()) return null
-        val windowSize = currentWindowAdaptiveInfo().windowSizeClass
         val last = entries.last()
+        
+        // Skip if the last entry is an overlay - let OverlaySceneStrategy handle it
+        if (last.metadata.containsKey("dialog")) return null
+        
+        val windowSize = currentWindowAdaptiveInfo().windowSizeClass
 
         /* --- decide which scene shape we can support ---------------- */
         val canSplit = windowSize.isWidthAtLeastBreakpoint(minWidthBreakpoint) &&
@@ -133,12 +137,14 @@ class AdaptiveTwoPaneStrategy<T : Any>(
             }
 
             /* fall back: single-pane with/without BottomBar           */
-            else -> SingleEntryScene(
+            showBottomBar -> SingleEntryScene(
                 key = last.contentKey,
                 previousEntries = entries.dropLast(1),
                 entry = last,
                 bottomBar = if (showBottomBar) bottomBar else null
             )
+
+            else -> null
         }
     }
 }
