@@ -13,6 +13,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.Person
@@ -31,6 +32,7 @@ import androidx.compose.runtime.compositionLocalOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.unit.dp
 import androidx.navigation3.runtime.NavKey
 import androidx.navigation3.runtime.entry
 import androidx.navigation3.runtime.entryProvider
@@ -83,104 +85,109 @@ fun App() {
                                         backStack.add(it)
                                     }
                                 })
+                        },
+                        placeholder = {
+                            PlaceholderPane()
                         })
                 )
             }
 
-    NavDisplay(backStack = backStack, entryProvider = entryProvider {
-        entry<Home>(
-            metadata = mapOf(
-                KEY_TWO_PANE to true,
-                KEY_BOTTOM_BAR to true
-            ) + NavDisplay.transitionSpec {
-                ContentTransform(
-                    targetContentEnter = fadeIn(animationSpec = tween(200)),
-                    initialContentExit = fadeOut(animationSpec = tween(200))
-                )
-            } + NavDisplay.popTransitionSpec {
-                ContentTransform(
-                    targetContentEnter = fadeIn(animationSpec = tween(200)),
-                    initialContentExit = fadeOut(animationSpec = tween(200))
-                )
-            }) {
-            Screen(
-                "Home",
-                openDetail = {
-                    if (backStack.lastOrNull() == HomeDetail) {
-                        backStack.removeAt(backStack.lastIndex)
-                    }
-                    backStack.add(HomeDetail)
-                },
-                openDialog = { backStack.add(Overlay) },
-                modifier = Modifier.background(color = MaterialTheme.colorScheme.primaryContainer)
-            )
-        }
-
-        entry<HomeDetail>(metadata = mapOf(KEY_TWO_PANE to true)) {
-            DetailScreen(
-                "Detail",
-                back = { backStack.removeAt(backStack.lastIndex) },
-                modifier = Modifier.background(color = MaterialTheme.colorScheme.primaryContainer)
-            )
-        }
-
-        entry<Overlay>(metadata = OverlaySceneStrategy.overlay()) {
-            Column {
-                Text("Overlay")
-                Button(onClick = { backStack.removeAt(backStack.lastIndex) }) {
-                    Text("Close")
+            NavDisplay(backStack = backStack, entryProvider = entryProvider {
+                entry<Home>(
+                    metadata = mapOf(
+                        KEY_TWO_PANE to true,
+                        KEY_BOTTOM_BAR to true,
+                        KEY_PLACEHOLDER to true
+                    ) + NavDisplay.transitionSpec {
+                        ContentTransform(
+                            targetContentEnter = fadeIn(animationSpec = tween(200)),
+                            initialContentExit = fadeOut(animationSpec = tween(200))
+                        )
+                    } + NavDisplay.popTransitionSpec {
+                        ContentTransform(
+                            targetContentEnter = fadeIn(animationSpec = tween(200)),
+                            initialContentExit = fadeOut(animationSpec = tween(200))
+                        )
+                    }) {
+                    Screen(
+                        "Home",
+                        openDetail = {
+                            if (backStack.lastOrNull() == HomeDetail) {
+                                backStack.removeAt(backStack.lastIndex)
+                            }
+                            backStack.add(HomeDetail)
+                        },
+                        openDialog = { backStack.add(Overlay) },
+                        modifier = Modifier.background(color = MaterialTheme.colorScheme.primaryContainer)
+                            .
+                    )
                 }
-            }
-        }
 
-        entry<Profile>(metadata = mapOf(KEY_BOTTOM_BAR to true) + NavDisplay.transitionSpec {
-            ContentTransform(
-                targetContentEnter = fadeIn(animationSpec = tween(200)),
-                initialContentExit = fadeOut(animationSpec = tween(200))
-            )
-        } + NavDisplay.popTransitionSpec {
-            ContentTransform(
-                targetContentEnter = fadeIn(animationSpec = tween(200)),
-                initialContentExit = fadeOut(animationSpec = tween(200))
-            )
-        }) {
-            Screen(
-                "Profile",
-                openDetail = {
-                    if (backStack.lastOrNull() == HomeDetail) {
-                        backStack.removeAt(backStack.lastIndex)
+                entry<HomeDetail>(metadata = mapOf(KEY_TWO_PANE to true)) {
+                    DetailScreen(
+                        "Detail",
+                        back = { backStack.removeAt(backStack.lastIndex) },
+                        modifier = Modifier.background(color = MaterialTheme.colorScheme.primaryContainer)
+                    )
+                }
+
+                entry<Overlay>(metadata = OverlaySceneStrategy.overlay()) {
+                    Column {
+                        Text("Overlay")
+                        Button(onClick = { backStack.removeAt(backStack.lastIndex) }) {
+                            Text("Close")
+                        }
                     }
-                    backStack.add(HomeDetail)
-                },
-                openDialog = { backStack.add(Overlay) },
-                modifier = Modifier.background(color = MaterialTheme.colorScheme.secondaryContainer)
-            )
-        }
-    }, sceneStrategy = sceneStrategy, transitionSpec = {
-        ContentTransform(
-            targetContentEnter = scaleIn(
-                animationSpec = tween(150), initialScale = 0.8f
-            ) + fadeIn(
-                animationSpec = tween(150)
-            ), initialContentExit = scaleOut(
-                animationSpec = tween(150), targetScale = 1.1f
-            ) + fadeOut(
-                animationSpec = tween(150)
-            )
-        )
-    }, popTransitionSpec = {
-        ContentTransform(
-            targetContentEnter = scaleIn(
-                animationSpec = tween(150), initialScale = 1.1f
-            ) + fadeIn(
-                animationSpec = tween(150)
-            ), initialContentExit = scaleOut(
-                animationSpec = tween(150), targetScale = 0.8f
-            ) + fadeOut(
-                animationSpec = tween(150)
-            )
-        )
-    })
+                }
+
+                entry<Profile>(metadata = mapOf(KEY_BOTTOM_BAR to true) + NavDisplay.transitionSpec {
+                    ContentTransform(
+                        targetContentEnter = fadeIn(animationSpec = tween(200)),
+                        initialContentExit = fadeOut(animationSpec = tween(200))
+                    )
+                } + NavDisplay.popTransitionSpec {
+                    ContentTransform(
+                        targetContentEnter = fadeIn(animationSpec = tween(200)),
+                        initialContentExit = fadeOut(animationSpec = tween(200))
+                    )
+                }) {
+                    Screen(
+                        "Profile",
+                        openDetail = {
+                            if (backStack.lastOrNull() == HomeDetail) {
+                                backStack.removeAt(backStack.lastIndex)
+                            }
+                            backStack.add(HomeDetail)
+                        },
+                        openDialog = { backStack.add(Overlay) },
+                        modifier = Modifier.background(color = MaterialTheme.colorScheme.secondaryContainer)
+                    )
+                }
+            }, sceneStrategy = sceneStrategy, transitionSpec = {
+                ContentTransform(
+                    targetContentEnter = scaleIn(
+                        animationSpec = tween(150), initialScale = 0.8f
+                    ) + fadeIn(
+                        animationSpec = tween(150)
+                    ), initialContentExit = scaleOut(
+                        animationSpec = tween(150), targetScale = 1.1f
+                    ) + fadeOut(
+                        animationSpec = tween(150)
+                    )
+                )
+            }, popTransitionSpec = {
+                ContentTransform(
+                    targetContentEnter = scaleIn(
+                        animationSpec = tween(150), initialScale = 1.1f
+                    ) + fadeIn(
+                        animationSpec = tween(150)
+                    ), initialContentExit = scaleOut(
+                        animationSpec = tween(150), targetScale = 0.8f
+                    ) + fadeOut(
+                        animationSpec = tween(150)
+                    )
+                )
+            })
         }
     }
 }
@@ -216,6 +223,34 @@ private fun DetailScreen(title: String = "Home", back: () -> Unit, modifier: Mod
                 OutlinedButton(onClick = back) {
                     Text("Back")
                 }
+            }
+        }
+    }
+}
+
+@Composable
+private fun PlaceholderPane(modifier: Modifier = Modifier) {
+    Surface(
+        modifier = modifier.fillMaxSize(),
+        color = MaterialTheme.colorScheme.surfaceVariant
+    ) {
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(16.dp),
+            contentAlignment = Alignment.Center
+        ) {
+            Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                Text(
+                    text = "Select an item",
+                    style = MaterialTheme.typography.headlineSmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+                Text(
+                    text = "Tap 'Open Detail' to view details here",
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f)
+                )
             }
         }
     }

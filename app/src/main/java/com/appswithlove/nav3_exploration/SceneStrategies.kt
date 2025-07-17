@@ -22,6 +22,7 @@ import androidx.window.core.layout.WindowSizeClass.Companion.WIDTH_DP_MEDIUM_LOW
 /* ------------------------------------------------------------------ */
 const val KEY_TWO_PANE = "twoPane"      // true ⇢ destination wants to participate in a 2-pane scene
 const val KEY_BOTTOM_BAR = "bottomBar"    // true ⇢ destination wants BottomBar to be shown
+const val KEY_PLACEHOLDER = "placeholder"  // true ⇢ destination wants to show placeholder in second pane when alone
 
 /* ------------------------------------------------------------------ */
 /*  Single-pane scene with optional BottomBar                         */
@@ -62,11 +63,12 @@ class TwoPaneScene<T : Any>(
     override val key: Any,
     override val previousEntries: List<NavEntry<T>>,
     val first: NavEntry<T>,
-    val second: NavEntry<T>,
-    private val bottomBar: (@Composable () -> Unit)? = null
+    val second: NavEntry<T>?,
+    private val bottomBar: (@Composable () -> Unit)? = null,
+    private val placeholder: (@Composable () -> Unit)? = null
 ) : Scene<T> {
 
-    override val entries = listOf(first, second)
+    override val entries = listOfNotNull(first, second)
 
     override val content: @Composable (() -> Unit) = {
         Column {
@@ -75,9 +77,17 @@ class TwoPaneScene<T : Any>(
                     .fillMaxSize()
                     .weight(1f)
             ) {
-                entries.forEach {
-                    Column(modifier = Modifier.weight(0.5f)) {
-                        it.Content()
+                // First pane
+                Column(modifier = Modifier.weight(0.5f)) {
+                    first.Content()
+                }
+                
+                // Second pane - either the actual entry or placeholder
+                Column(modifier = Modifier.weight(0.5f)) {
+                    if (second != null) {
+                        second.Content()
+                    } else {
+                        placeholder?.invoke()
                     }
                 }
             }
@@ -97,6 +107,7 @@ class TwoPaneScene<T : Any>(
 /* ------------------------------------------------------------------ */
 class AdaptiveTwoPaneStrategy<T : Any>(
     private val bottomBar: @Composable () -> Unit,
+    private val placeholder: (@Composable () -> Unit)? = null,
     private val minWidthBreakpoint: Int = WIDTH_DP_MEDIUM_LOWER_BOUND
 ) : SceneStrategy<T> {
 
@@ -112,24 +123,38 @@ class AdaptiveTwoPaneStrategy<T : Any>(
         val windowSize = currentWindowAdaptiveInfo().windowSizeClass
 
         /* --- decide which scene shape we can support ---------------- */
-        val canSplit = windowSize.isWidthAtLeastBreakpoint(minWidthBreakpoint) &&
-                entries.size >= 2
+        val canSplit = windowSize.isWidthAtLeastBreakpoint(minWidthBreakpoint)
 
-        val lastTwo = if (canSplit) entries.takeLast(2) else emptyList()
+        val lastTwo = if (canSplit && entries.size >= 2) entries.takeLast(2) else emptyList()
         val bothTwoPane = lastTwo.all { it.metadata[KEY_TWO_PANE] == true }
+        val lastEntryTwoPane = last.metadata[KEY_TWO_PANE] == true
+        val lastEntryWantsPlaceholder = last.metadata[KEY_PLACEHOLDER] == true
+        
         val showBottomBar =
-            (entries.takeLast(if (canSplit) 2 else 1))
+            (entries.takeLast(if (canSplit && entries.size >= 2) 2 else 1))
                 .any { it.metadata[KEY_BOTTOM_BAR] == true }
 
         return when {
             /* 2-pane possible and requested by both destinations */
-            canSplit && bothTwoPane -> {
+            canSplit && lastTwo.size == 2 && bothTwoPane -> {
                 TwoPaneScene(
                     key = lastTwo.map { it.contentKey },
                     previousEntries = entries.dropLast(2),
                     first = lastTwo[0],
                     second = lastTwo[1],
                     bottomBar = if (showBottomBar) bottomBar else null
+                )
+            }
+            
+            /* 2-pane possible with single entry + placeholder */
+            canSplit && lastEntryTwoPane && lastEntryWantsPlaceholder && placeholder != null -> {
+                TwoPaneScene(
+                    key = last.contentKey,
+                    previousEntries = entries.dropLast(1),
+                    first = last,
+                    second = null,
+                    bottomBar = if (showBottomBar) bottomBar else null,
+                    placeholder = placeholder
                 )
             }
 
