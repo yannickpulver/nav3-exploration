@@ -1,6 +1,9 @@
 package com.appswithlove.nav3_exploration
 
 import androidx.compose.animation.ContentTransform
+import androidx.compose.animation.ExperimentalSharedTransitionApi
+import androidx.compose.animation.SharedTransitionLayout
+import androidx.compose.animation.SharedTransitionScope
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
@@ -12,6 +15,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Home
+import androidx.compose.material.icons.filled.Person
 import androidx.compose.material3.Button
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -21,6 +25,9 @@ import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.ProvidableCompositionLocal
+import androidx.compose.runtime.compositionLocalOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -28,6 +35,7 @@ import androidx.navigation3.runtime.NavKey
 import androidx.navigation3.runtime.entry
 import androidx.navigation3.runtime.entryProvider
 import androidx.navigation3.runtime.rememberNavBackStack
+import androidx.navigation3.ui.LocalNavAnimatedContentScope
 import androidx.navigation3.ui.NavDisplay
 import kotlinx.serialization.Serializable
 
@@ -46,24 +54,38 @@ data object Overlay : NavKey
 
 val bottombarItems = listOf(Home, Profile)
 
+@OptIn(ExperimentalSharedTransitionApi::class)
+private val LocalSharedTransitionScope: ProvidableCompositionLocal<SharedTransitionScope> =
+    compositionLocalOf {
+        throw IllegalStateException(
+            "Unexpected access to LocalSharedTransitionScope. You must provide a " +
+                    "SharedTransitionScope from a call to SharedTransitionLayout()"
+        )
+    }
+
+@OptIn(ExperimentalSharedTransitionApi::class)
 @Composable
 fun App() {
-    val backStack = rememberNavBackStack(Home)
+    SharedTransitionLayout {
+        CompositionLocalProvider(LocalSharedTransitionScope provides this) {
+            val backStack = rememberNavBackStack(Home)
 
-    val sceneStrategy = remember {
-        AdaptiveTwoPaneStrategy<Any>(
-            bottomBar = {
-                BottomBar(
-                    selected = backStack.lastOrNull(), navigate = {
-                        if (backStack.lastOrNull() != it && backStack.lastOrNull() in bottombarItems) {
-                            backStack.removeAt(backStack.lastIndex)
-                        }
-                        if (!backStack.contains(it)) {
-                            backStack.add(it)
-                        }
-                    })
-            }).then(OverlaySceneStrategy())
-    }
+            val sceneStrategy = remember {
+                OverlaySceneStrategy<Any>().then(
+                    AdaptiveTwoPaneStrategy<Any>(
+                        bottomBar = {
+                            BottomBar(
+                                selected = backStack.lastOrNull(), navigate = {
+                                    if (backStack.lastOrNull() != it && backStack.lastOrNull() in bottombarItems) {
+                                        backStack.removeAt(backStack.lastIndex)
+                                    }
+                                    if (!backStack.contains(it)) {
+                                        backStack.add(it)
+                                    }
+                                })
+                        })
+                )
+            }
 
     NavDisplay(backStack = backStack, entryProvider = entryProvider {
         entry<Home>(
@@ -159,6 +181,8 @@ fun App() {
             )
         )
     })
+        }
+    }
 }
 
 @Composable
@@ -197,16 +221,29 @@ private fun DetailScreen(title: String = "Home", back: () -> Unit, modifier: Mod
     }
 }
 
+@OptIn(ExperimentalSharedTransitionApi::class)
 @Composable
 fun BottomBar(selected: NavKey?, navigate: (NavKey) -> Unit, modifier: Modifier = Modifier) {
-    NavigationBar(modifier = modifier) {
-        bottombarItems.forEach { destination ->
-
-            NavigationBarItem(icon = {
-                Icon(
-                    imageVector = Icons.Filled.Home, contentDescription = null
-                )
-            }, selected = destination == selected, onClick = { navigate(destination) })
+    val sharedTransitionScope = LocalSharedTransitionScope.current
+    with(sharedTransitionScope) {
+        NavigationBar(
+            modifier = modifier.sharedElement(
+                rememberSharedContentState(key = "bottom_navigation"),
+                animatedVisibilityScope = LocalNavAnimatedContentScope.current
+            )
+        ) {
+            bottombarItems.forEach { destination ->
+                NavigationBarItem(icon = {
+                    val iconVector = when (destination) {
+                        Home -> Icons.Filled.Home
+                        Profile -> Icons.Filled.Person
+                        else -> Icons.Filled.Home
+                    }
+                    Icon(
+                        imageVector = iconVector, contentDescription = null
+                    )
+                }, selected = destination == selected, onClick = { navigate(destination) })
+            }
         }
     }
 }

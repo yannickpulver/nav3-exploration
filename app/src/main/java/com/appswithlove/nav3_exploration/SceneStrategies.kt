@@ -109,9 +109,6 @@ class AdaptiveTwoPaneStrategy<T : Any>(
         if (entries.isEmpty()) return null
         val last = entries.last()
         
-        // Skip if the last entry is an overlay - let OverlaySceneStrategy handle it
-        if (last.metadata.containsKey("dialog")) return null
-        
         val windowSize = currentWindowAdaptiveInfo().windowSizeClass
 
         /* --- decide which scene shape we can support ---------------- */
