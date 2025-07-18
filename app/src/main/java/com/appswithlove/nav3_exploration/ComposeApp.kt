@@ -43,6 +43,7 @@ import androidx.navigation3.ui.NavDisplay
 import androidx.navigation3.ui.rememberSceneSetupNavEntryDecorator
 import com.appswithlove.nav3_exploration.ui.detail.DetailScreen
 import com.appswithlove.nav3_exploration.ui.home.HomeScreen
+import com.appswithlove.nav3_exploration.ui.profile.ProfileScreen
 import kotlinx.serialization.Serializable
 import kotlin.random.Random
 
@@ -100,18 +101,7 @@ fun ComposeApp() {
                     rememberSavedStateNavEntryDecorator(),
                     rememberViewModelStoreNavEntryDecorator()
                 ), entryProvider = entryProvider {
-                    entry<Home>(metadata = AdaptiveTwoPaneStrategy.twoPane() + AdaptiveTwoPaneStrategy.bottomBar() + AdaptiveTwoPaneStrategy.placeholder() + NavDisplay.transitionSpec {
-                        ContentTransform(
-                            targetContentEnter = fadeIn(animationSpec = tween(200)),
-                            initialContentExit = fadeOut(animationSpec = tween(200))
-                        )
-                    } + NavDisplay.popTransitionSpec {
-                        ContentTransform(
-                            targetContentEnter = fadeIn(animationSpec = tween(200)),
-                            initialContentExit = fadeOut(animationSpec = tween(200))
-                        )
-                    }) {
-
+                    entry<Home>(metadata = AdaptiveTwoPaneStrategy.twoPane() + AdaptiveTwoPaneStrategy.bottomBar() + AdaptiveTwoPaneStrategy.placeholder() + fadeOnly()) {
                         HomeScreen(
                             openDetail = {
                                 if (backStack.lastOrNull() is HomeDetail) {
@@ -140,32 +130,17 @@ fun ComposeApp() {
                         }
                     }
 
-                    entry<Profile>(metadata = AdaptiveTwoPaneStrategy.bottomBar() + NavDisplay.transitionSpec {
-                        ContentTransform(
-                            targetContentEnter = fadeIn(animationSpec = tween(200)),
-                            initialContentExit = fadeOut(animationSpec = tween(200))
-                        )
-                    } + NavDisplay.popTransitionSpec {
-                        ContentTransform(
-                            targetContentEnter = fadeIn(animationSpec = tween(200)),
-                            initialContentExit = fadeOut(animationSpec = tween(200))
-                        )
-                    }) {
-                        Screen(
-                            "Profile",
+                    entry<Profile>(metadata = AdaptiveTwoPaneStrategy.bottomBar() + fadeOnly()) {
+                        ProfileScreen(
                             openDetail = {
                                 if (backStack.lastOrNull() is HomeDetail) {
                                     backStack.removeAt(backStack.lastIndex)
                                 }
                                 backStack.add(HomeDetail(Random.nextInt()))
-                            },
-                            openDialog = { backStack.add(Overlay) },
-                            color = MaterialTheme.colorScheme.secondaryContainer
+                            }
                         )
                     }
-                },
-                sceneStrategy = sceneStrategy,
-                transitionSpec = {
+                }, sceneStrategy = sceneStrategy, transitionSpec = {
                     ContentTransform(
                         targetContentEnter = scaleIn(
                             animationSpec = tween(150), initialScale = 0.8f
@@ -192,6 +167,18 @@ fun ComposeApp() {
                 })
         }
     }
+}
+
+fun fadeOnly() = NavDisplay.transitionSpec {
+    ContentTransform(
+        targetContentEnter = fadeIn(animationSpec = tween(200)),
+        initialContentExit = fadeOut(animationSpec = tween(200))
+    )
+} + NavDisplay.popTransitionSpec {
+    ContentTransform(
+        targetContentEnter = fadeIn(animationSpec = tween(200)),
+        initialContentExit = fadeOut(animationSpec = tween(200))
+    )
 }
 
 @Composable

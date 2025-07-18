@@ -15,6 +15,7 @@ import androidx.navigation3.runtime.NavEntry
 import androidx.navigation3.ui.Scene
 import androidx.navigation3.ui.SceneStrategy
 import androidx.window.core.layout.WindowSizeClass.Companion.WIDTH_DP_MEDIUM_LOWER_BOUND
+import com.appswithlove.nav3_exploration.AdaptiveTwoPaneStrategy.Companion.KEY_BOTTOM_BAR
 
 /* ------------------------------------------------------------------ */
 /*  Single-pane scene with optional BottomBar                         */

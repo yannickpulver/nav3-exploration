@@ -1,4 +1,4 @@
-package com.appswithlove.nav3_exploration.ui
+package com.appswithlove.nav3_exploration
 
 import android.app.Application
 import com.appswithlove.nav3_exploration.ui.detail.DetailViewModel
