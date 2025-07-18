@@ -17,8 +17,15 @@ This project showcases more complex layouts that can be built with `Navigation 3
 - Shows content as bottom sheets on mobile devices
 - Handles adaptive overlay presentation across different screen sizes
 
-## Tech Stack
+### 📚 **TopLevelBackStack** 
+- Inspired by [@kotlearn's jetpack-navigation-3-alpha](https://github.com/kotlearn/jetpack-navigation-3-alpha)
+- Custom backstack management for multi-tab navigation
+- Maintains separate navigation stacks for each top-level destination (Home, Profile)
+- Handles complex back navigation between tabs and detail screens
+- Preserves navigation state across configuration changes
+- Enables seamless switching between different sections while maintaining their individual navigation history
 
+## Tech Stack
 - **Navigation3** (alpha) - Next-generation Android navigation
 - **Jetpack Compose** - Modern Android UI toolkit
 - **Material3** - Latest Material Design components
@@ -31,9 +38,3 @@ This project showcases more complex layouts that can be built with `Navigation 3
 
 ### Single-Pane Layout (Mobile)
 ![Single-Pane Demo](docs/singlepane.gif)
-
-## Getting Started
-
-1. Clone the repository
-2. Open in Android Studio
-3. Run the app on different device sizes to see adaptive behavior
