@@ -21,6 +21,7 @@ import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.ProvidableCompositionLocal
 import androidx.compose.runtime.compositionLocalOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.Saver
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
@@ -37,11 +38,83 @@ import com.appswithlove.nav3_exploration.ui.home.HomeScreen
 import com.appswithlove.nav3_exploration.ui.navigation.BottomBar
 import com.appswithlove.nav3_exploration.ui.navigation.Screens
 import com.appswithlove.nav3_exploration.ui.navigation.TopLevelBackStack
+import com.appswithlove.nav3_exploration.ui.navigation.rememberTopLevelBackStack
 import com.appswithlove.nav3_exploration.ui.navigation.sharedElementDecorator
 import com.appswithlove.nav3_exploration.ui.overlay.Overlay
 import com.appswithlove.nav3_exploration.ui.profile.ProfileScreen
+import kotlinx.serialization.json.Json
 import kotlin.random.Random
 
+
+// Data class to represent the saveable state of TopLevelBackStack
+@kotlinx.serialization.Serializable
+private data class TopLevelBackStackState(
+    val startKey: String,
+    val topLevelKey: String,
+    val topLevelBackStacks: Map<String, List<String>>
+)
+
+// Saver for TopLevelBackStack
+fun <T : NavKey> topLevelBackStackSaver(
+    serialize: (T) -> String,
+    deserialize: (String) -> T
+): Saver<TopLevelBackStack<T>, String> = Saver(
+    save = { backStack ->
+        val state = TopLevelBackStackState(
+            startKey = serialize(backStack.backStack.first()), // The start key is always first
+            topLevelKey = serialize(backStack.topLevelKey),
+            topLevelBackStacks = mapOf(
+                serialize(backStack.topLevelKey) to backStack.backStack.map { serialize(it) }
+            )
+        )
+        Json.encodeToString(state)
+    },
+    restore = { saved ->
+        val state: TopLevelBackStackState = Json.decodeFromString(saved)
+        val startKey = deserialize(state.startKey)
+        val topLevelKey = deserialize(state.topLevelKey)
+
+        TopLevelBackStack(startKey).apply {
+            if (topLevelKey != startKey) {
+                switchTopLevel(topLevelKey)
+            }
+
+            val savedBackStack =
+                state.topLevelBackStacks[state.topLevelKey]?.map { deserialize(it) }
+            if (savedBackStack != null && savedBackStack.size > 1) {
+                savedBackStack.drop(1).forEach { key ->
+                    add(key)
+                }
+            }
+        }
+    }
+)
+
+// Helper function to create saver for Screens NavKey types
+fun topLevelBackStackSaver(): Saver<TopLevelBackStack<NavKey>, String> = topLevelBackStackSaver(
+    serialize = { navKey ->
+        when (navKey) {
+            is Screens.Home -> "Home"
+            is Screens.Profile -> "Profile"
+            is Screens.Overlay -> "Overlay"
+            is Screens.HomeDetail -> "HomeDetail:${navKey.id}"
+            else -> throw IllegalArgumentException("Unknown NavKey type: $navKey")
+        }
+    },
+    deserialize = { serialized ->
+        when {
+            serialized == "Home" -> Screens.Home
+            serialized == "Profile" -> Screens.Profile
+            serialized == "Overlay" -> Screens.Overlay
+            serialized.startsWith("HomeDetail:") -> {
+                val id = serialized.substringAfter("HomeDetail:").toInt()
+                Screens.HomeDetail(id)
+            }
+
+            else -> throw IllegalArgumentException("Unknown serialized NavKey: $serialized")
+        }
+    }
+)
 
 @OptIn(ExperimentalSharedTransitionApi::class)
 val LocalSharedTransitionScope: ProvidableCompositionLocal<SharedTransitionScope> =
@@ -56,7 +129,7 @@ val LocalSharedTransitionScope: ProvidableCompositionLocal<SharedTransitionScope
 fun ComposeApp() {
     SharedTransitionLayout {
         CompositionLocalProvider(LocalSharedTransitionScope provides this) {
-            val topLevelBackStack = remember { TopLevelBackStack<NavKey>(Screens.Home) }
+            val topLevelBackStack = rememberTopLevelBackStack(Screens.Home)
 
             val sceneStrategy = remember {
                 OverlaySceneStrategy<Any>().then(
