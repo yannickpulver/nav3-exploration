@@ -26,12 +26,13 @@ fun HomeScreen(
     Surface(modifier = modifier.fillMaxSize(), color = MaterialTheme.colorScheme.primaryContainer) {
         Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
             Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                Text("Home" + " ${state.number}")
+                Text("Home")
+                Text("Id: ${state.id}")
                 Button(onClick = openDetail) {
                     Text("Open Detail")
                 }
                 Button(onClick = openDialog) {
-                    Text("Open Dialog")
+                    Text("Open Overlay")
                 }
             }
         }

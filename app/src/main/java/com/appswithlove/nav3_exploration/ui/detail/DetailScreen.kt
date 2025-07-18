@@ -28,7 +28,8 @@ fun DetailScreen(
     Surface(modifier = modifier.fillMaxSize(), color = color) {
         Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
             Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                Text(title + " ${state.number}")
+                Text(title)
+                Text("id: ${state.id}")
                 OutlinedButton(onClick = back) {
                     Text("Back")
                 }

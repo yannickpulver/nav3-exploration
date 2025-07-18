@@ -9,7 +9,7 @@ import kotlin.random.Random
 
 data class HomeState(
     val text: String = "home",
-    val number: Int = Random.nextInt()
+    val id: Int = Random.nextInt()
 )
 
 
