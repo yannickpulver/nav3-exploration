@@ -142,7 +142,7 @@ class AdaptiveTwoPaneStrategy<T : Any>(
                     previousEntries = entries.dropLast(2),
                     first = lastTwo[0],
                     second = lastTwo[1],
-                    bottomBar = if (showBottomBar) bottomBar else null
+                    bottomBar = if (showBottomBar) bottomBar else null,
                 )
             }
             

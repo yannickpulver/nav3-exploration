@@ -9,7 +9,6 @@ import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.scaleIn
 import androidx.compose.animation.scaleOut
-import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
@@ -32,21 +31,28 @@ import androidx.compose.runtime.compositionLocalOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.viewmodel.navigation3.rememberViewModelStoreNavEntryDecorator
 import androidx.navigation3.runtime.NavKey
 import androidx.navigation3.runtime.entry
 import androidx.navigation3.runtime.entryProvider
 import androidx.navigation3.runtime.rememberNavBackStack
+import androidx.navigation3.runtime.rememberSavedStateNavEntryDecorator
 import androidx.navigation3.ui.LocalNavAnimatedContentScope
 import androidx.navigation3.ui.NavDisplay
+import androidx.navigation3.ui.rememberSceneSetupNavEntryDecorator
+import com.appswithlove.nav3_exploration.ui.detail.DetailScreen
+import com.appswithlove.nav3_exploration.ui.home.HomeScreen
 import kotlinx.serialization.Serializable
+import kotlin.random.Random
 
 
 @Serializable
 object Home : NavKey
 
 @Serializable
-object HomeDetail : NavKey
+data class HomeDetail(val id: Int) : NavKey
 
 @Serializable
 data object Profile : NavKey
@@ -67,7 +73,7 @@ private val LocalSharedTransitionScope: ProvidableCompositionLocal<SharedTransit
 
 @OptIn(ExperimentalSharedTransitionApi::class)
 @Composable
-fun App() {
+fun ComposeApp() {
     SharedTransitionLayout {
         CompositionLocalProvider(LocalSharedTransitionScope provides this) {
             val backStack = rememberNavBackStack(Home)
@@ -92,13 +98,60 @@ fun App() {
                 )
             }
 
-            NavDisplay(backStack = backStack, entryProvider = entryProvider {
-                entry<Home>(
-                    metadata = mapOf(
-                        KEY_TWO_PANE to true,
-                        KEY_BOTTOM_BAR to true,
-                        KEY_PLACEHOLDER to true
-                    ) + NavDisplay.transitionSpec {
+            NavDisplay(
+                backStack = backStack,
+                entryDecorators = listOf(
+                    rememberSceneSetupNavEntryDecorator(),
+                    rememberSavedStateNavEntryDecorator(),
+                    rememberViewModelStoreNavEntryDecorator()
+                ),
+                entryProvider = entryProvider {
+                    entry<Home>(
+                        metadata = mapOf(
+                            KEY_TWO_PANE to true,
+                            KEY_BOTTOM_BAR to true,
+                            KEY_PLACEHOLDER to true
+                        ) + NavDisplay.transitionSpec {
+                            ContentTransform(
+                                targetContentEnter = fadeIn(animationSpec = tween(200)),
+                                initialContentExit = fadeOut(animationSpec = tween(200))
+                            )
+                        } + NavDisplay.popTransitionSpec {
+                            ContentTransform(
+                                targetContentEnter = fadeIn(animationSpec = tween(200)),
+                                initialContentExit = fadeOut(animationSpec = tween(200))
+                            )
+                        }) {
+
+                        HomeScreen(
+                            openDetail = {
+                                if (backStack.lastOrNull() is HomeDetail) {
+                                    backStack.removeAt(backStack.lastIndex)
+                                }
+                                backStack.add(HomeDetail(Random.nextInt()))
+                            },
+                            openDialog = { backStack.add(Overlay) },
+                        )
+                    }
+
+                    entry<HomeDetail>(metadata = mapOf(KEY_TWO_PANE to true)) {
+                        DetailScreen(
+                            "Detail",
+                            back = { backStack.removeAt(backStack.lastIndex) },
+                            color = MaterialTheme.colorScheme.primaryContainer
+                        )
+                    }
+
+                    entry<Overlay>(metadata = OverlaySceneStrategy.overlay()) {
+                        Column {
+                            Text("Overlay")
+                            Button(onClick = { backStack.removeAt(backStack.lastIndex) }) {
+                                Text("Close")
+                            }
+                        }
+                    }
+
+                    entry<Profile>(metadata = mapOf(KEY_BOTTOM_BAR to true) + NavDisplay.transitionSpec {
                         ContentTransform(
                             targetContentEnter = fadeIn(animationSpec = tween(200)),
                             initialContentExit = fadeOut(animationSpec = tween(200))
@@ -109,85 +162,43 @@ fun App() {
                             initialContentExit = fadeOut(animationSpec = tween(200))
                         )
                     }) {
-                    Screen(
-                        "Home",
-                        openDetail = {
-                            if (backStack.lastOrNull() == HomeDetail) {
-                                backStack.removeAt(backStack.lastIndex)
-                            }
-                            backStack.add(HomeDetail)
-                        },
-                        openDialog = { backStack.add(Overlay) },
-                        modifier = Modifier.background(color = MaterialTheme.colorScheme.primaryContainer)
-                            .
-                    )
-                }
-
-                entry<HomeDetail>(metadata = mapOf(KEY_TWO_PANE to true)) {
-                    DetailScreen(
-                        "Detail",
-                        back = { backStack.removeAt(backStack.lastIndex) },
-                        modifier = Modifier.background(color = MaterialTheme.colorScheme.primaryContainer)
-                    )
-                }
-
-                entry<Overlay>(metadata = OverlaySceneStrategy.overlay()) {
-                    Column {
-                        Text("Overlay")
-                        Button(onClick = { backStack.removeAt(backStack.lastIndex) }) {
-                            Text("Close")
-                        }
+                        Screen(
+                            "Profile",
+                            openDetail = {
+                                if (backStack.lastOrNull() is HomeDetail) {
+                                    backStack.removeAt(backStack.lastIndex)
+                                }
+                                backStack.add(HomeDetail(Random.nextInt()))
+                            },
+                            openDialog = { backStack.add(Overlay) },
+                            color = MaterialTheme.colorScheme.secondaryContainer
+                        )
                     }
-                }
-
-                entry<Profile>(metadata = mapOf(KEY_BOTTOM_BAR to true) + NavDisplay.transitionSpec {
+                }, sceneStrategy = sceneStrategy, transitionSpec = {
                     ContentTransform(
-                        targetContentEnter = fadeIn(animationSpec = tween(200)),
-                        initialContentExit = fadeOut(animationSpec = tween(200))
+                        targetContentEnter = scaleIn(
+                            animationSpec = tween(150), initialScale = 0.8f
+                        ) + fadeIn(
+                            animationSpec = tween(150)
+                        ), initialContentExit = scaleOut(
+                            animationSpec = tween(150), targetScale = 1.1f
+                        ) + fadeOut(
+                            animationSpec = tween(150)
+                        )
                     )
-                } + NavDisplay.popTransitionSpec {
+                }, popTransitionSpec = {
                     ContentTransform(
-                        targetContentEnter = fadeIn(animationSpec = tween(200)),
-                        initialContentExit = fadeOut(animationSpec = tween(200))
+                        targetContentEnter = scaleIn(
+                            animationSpec = tween(150), initialScale = 1.1f
+                        ) + fadeIn(
+                            animationSpec = tween(150)
+                        ), initialContentExit = scaleOut(
+                            animationSpec = tween(150), targetScale = 0.8f
+                        ) + fadeOut(
+                            animationSpec = tween(150)
+                        )
                     )
-                }) {
-                    Screen(
-                        "Profile",
-                        openDetail = {
-                            if (backStack.lastOrNull() == HomeDetail) {
-                                backStack.removeAt(backStack.lastIndex)
-                            }
-                            backStack.add(HomeDetail)
-                        },
-                        openDialog = { backStack.add(Overlay) },
-                        modifier = Modifier.background(color = MaterialTheme.colorScheme.secondaryContainer)
-                    )
-                }
-            }, sceneStrategy = sceneStrategy, transitionSpec = {
-                ContentTransform(
-                    targetContentEnter = scaleIn(
-                        animationSpec = tween(150), initialScale = 0.8f
-                    ) + fadeIn(
-                        animationSpec = tween(150)
-                    ), initialContentExit = scaleOut(
-                        animationSpec = tween(150), targetScale = 1.1f
-                    ) + fadeOut(
-                        animationSpec = tween(150)
-                    )
-                )
-            }, popTransitionSpec = {
-                ContentTransform(
-                    targetContentEnter = scaleIn(
-                        animationSpec = tween(150), initialScale = 1.1f
-                    ) + fadeIn(
-                        animationSpec = tween(150)
-                    ), initialContentExit = scaleOut(
-                        animationSpec = tween(150), targetScale = 0.8f
-                    ) + fadeOut(
-                        animationSpec = tween(150)
-                    )
-                )
-            })
+                })
         }
     }
 }
@@ -197,9 +208,10 @@ private fun Screen(
     title: String = "Home",
     openDetail: () -> Unit,
     openDialog: () -> Unit,
+    color: Color = MaterialTheme.colorScheme.background,
     modifier: Modifier = Modifier
 ) {
-    Surface(modifier = modifier.fillMaxSize()) {
+    Surface(modifier = modifier.fillMaxSize(), color = color) {
         Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
             Column(horizontalAlignment = Alignment.CenterHorizontally) {
                 Text(title)
@@ -208,20 +220,6 @@ private fun Screen(
                 }
                 Button(onClick = openDialog) {
                     Text("Open Dialog")
-                }
-            }
-        }
-    }
-}
-
-@Composable
-private fun DetailScreen(title: String = "Home", back: () -> Unit, modifier: Modifier = Modifier) {
-    Surface(modifier = modifier.fillMaxSize()) {
-        Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-            Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                Text(title)
-                OutlinedButton(onClick = back) {
-                    Text("Back")
                 }
             }
         }

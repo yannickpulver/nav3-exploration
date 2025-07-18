@@ -44,6 +44,7 @@ dependencies {
 
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.lifecycle.runtime.ktx)
+    implementation(libs.androidx.lifecycle.viewmodel)
     implementation(libs.androidx.activity.compose)
     implementation(platform(libs.androidx.compose.bom))
     implementation(libs.androidx.ui)
@@ -57,11 +58,14 @@ dependencies {
     androidTestImplementation(libs.androidx.ui.test.junit4)
     debugImplementation(libs.androidx.ui.tooling)
     debugImplementation(libs.androidx.ui.test.manifest)
-    implementation("androidx.compose.material3:material3-adaptive-navigation-suite")
+    implementation(libs.androidx.material3.adaptive.navigation.suite)
     implementation(libs.androidx.material.icons.extended)
 
     implementation(libs.kotlinx.serialization.core)
     implementation(libs.kotlinx.serialization.json)
+
+    implementation(libs.koin.compose)
+    implementation(libs.koin.compose.viewmodel)
 
 
     implementation(libs.androidx.navigation3.runtime)
