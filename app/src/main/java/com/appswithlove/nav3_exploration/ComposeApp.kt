@@ -21,7 +21,6 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.NavigationBar
 import androidx.compose.material3.NavigationBarItem
-import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -66,8 +65,7 @@ val bottombarItems = listOf(Home, Profile)
 private val LocalSharedTransitionScope: ProvidableCompositionLocal<SharedTransitionScope> =
     compositionLocalOf {
         throw IllegalStateException(
-            "Unexpected access to LocalSharedTransitionScope. You must provide a " +
-                    "SharedTransitionScope from a call to SharedTransitionLayout()"
+            "Unexpected access to LocalSharedTransitionScope. You must provide a " + "SharedTransitionScope from a call to SharedTransitionLayout()"
         )
     }
 
@@ -80,48 +78,39 @@ fun ComposeApp() {
 
             val sceneStrategy = remember {
                 OverlaySceneStrategy<Any>().then(
-                    AdaptiveTwoPaneStrategy<Any>(
-                        bottomBar = {
-                            BottomBar(
-                                selected = backStack.lastOrNull(), navigate = {
-                                    if (backStack.lastOrNull() != it && backStack.lastOrNull() in bottombarItems) {
-                                        backStack.removeAt(backStack.lastIndex)
-                                    }
-                                    if (!backStack.contains(it)) {
-                                        backStack.add(it)
-                                    }
-                                })
-                        },
-                        placeholder = {
-                            PlaceholderPane()
-                        })
+                    AdaptiveTwoPaneStrategy<Any>(bottomBar = {
+                        BottomBar(
+                            selected = backStack.lastOrNull(), navigate = {
+                                if (backStack.lastOrNull() != it && backStack.lastOrNull() in bottombarItems) {
+                                    backStack.removeAt(backStack.lastIndex)
+                                }
+                                if (!backStack.contains(it)) {
+                                    backStack.add(it)
+                                }
+                            })
+                    }, placeholder = {
+                        PlaceholderPane()
+                    })
                 )
             }
 
             NavDisplay(
-                backStack = backStack,
-                entryDecorators = listOf(
+                backStack = backStack, entryDecorators = listOf(
                     rememberSceneSetupNavEntryDecorator(),
                     rememberSavedStateNavEntryDecorator(),
                     rememberViewModelStoreNavEntryDecorator()
-                ),
-                entryProvider = entryProvider {
-                    entry<Home>(
-                        metadata = mapOf(
-                            KEY_TWO_PANE to true,
-                            KEY_BOTTOM_BAR to true,
-                            KEY_PLACEHOLDER to true
-                        ) + NavDisplay.transitionSpec {
-                            ContentTransform(
-                                targetContentEnter = fadeIn(animationSpec = tween(200)),
-                                initialContentExit = fadeOut(animationSpec = tween(200))
-                            )
-                        } + NavDisplay.popTransitionSpec {
-                            ContentTransform(
-                                targetContentEnter = fadeIn(animationSpec = tween(200)),
-                                initialContentExit = fadeOut(animationSpec = tween(200))
-                            )
-                        }) {
+                ), entryProvider = entryProvider {
+                    entry<Home>(metadata = AdaptiveTwoPaneStrategy.twoPane() + AdaptiveTwoPaneStrategy.bottomBar() + AdaptiveTwoPaneStrategy.placeholder() + NavDisplay.transitionSpec {
+                        ContentTransform(
+                            targetContentEnter = fadeIn(animationSpec = tween(200)),
+                            initialContentExit = fadeOut(animationSpec = tween(200))
+                        )
+                    } + NavDisplay.popTransitionSpec {
+                        ContentTransform(
+                            targetContentEnter = fadeIn(animationSpec = tween(200)),
+                            initialContentExit = fadeOut(animationSpec = tween(200))
+                        )
+                    }) {
 
                         HomeScreen(
                             openDetail = {
@@ -134,7 +123,7 @@ fun ComposeApp() {
                         )
                     }
 
-                    entry<HomeDetail>(metadata = mapOf(KEY_TWO_PANE to true)) {
+                    entry<HomeDetail>(metadata = AdaptiveTwoPaneStrategy.twoPane()) {
                         DetailScreen(
                             "Detail",
                             back = { backStack.removeAt(backStack.lastIndex) },
@@ -151,7 +140,7 @@ fun ComposeApp() {
                         }
                     }
 
-                    entry<Profile>(metadata = mapOf(KEY_BOTTOM_BAR to true) + NavDisplay.transitionSpec {
+                    entry<Profile>(metadata = AdaptiveTwoPaneStrategy.bottomBar() + NavDisplay.transitionSpec {
                         ContentTransform(
                             targetContentEnter = fadeIn(animationSpec = tween(200)),
                             initialContentExit = fadeOut(animationSpec = tween(200))
@@ -174,7 +163,9 @@ fun ComposeApp() {
                             color = MaterialTheme.colorScheme.secondaryContainer
                         )
                     }
-                }, sceneStrategy = sceneStrategy, transitionSpec = {
+                },
+                sceneStrategy = sceneStrategy,
+                transitionSpec = {
                     ContentTransform(
                         targetContentEnter = scaleIn(
                             animationSpec = tween(150), initialScale = 0.8f
@@ -229,14 +220,12 @@ private fun Screen(
 @Composable
 private fun PlaceholderPane(modifier: Modifier = Modifier) {
     Surface(
-        modifier = modifier.fillMaxSize(),
-        color = MaterialTheme.colorScheme.surfaceVariant
+        modifier = modifier.fillMaxSize(), color = MaterialTheme.colorScheme.surfaceVariant
     ) {
         Box(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(16.dp),
-            contentAlignment = Alignment.Center
+                .padding(16.dp), contentAlignment = Alignment.Center
         ) {
             Column(horizontalAlignment = Alignment.CenterHorizontally) {
                 Text(

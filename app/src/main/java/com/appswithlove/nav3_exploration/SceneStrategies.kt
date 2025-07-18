@@ -16,14 +16,6 @@ import androidx.navigation3.ui.Scene
 import androidx.navigation3.ui.SceneStrategy
 import androidx.window.core.layout.WindowSizeClass.Companion.WIDTH_DP_MEDIUM_LOWER_BOUND
 
-
-/* ------------------------------------------------------------------ */
-/*  Metadata keys                                                     */
-/* ------------------------------------------------------------------ */
-const val KEY_TWO_PANE = "twoPane"      // true ⇢ destination wants to participate in a 2-pane scene
-const val KEY_BOTTOM_BAR = "bottomBar"    // true ⇢ destination wants BottomBar to be shown
-const val KEY_PLACEHOLDER = "placeholder"  // true ⇢ destination wants to show placeholder in second pane when alone
-
 /* ------------------------------------------------------------------ */
 /*  Single-pane scene with optional BottomBar                         */
 /* ------------------------------------------------------------------ */
@@ -168,5 +160,40 @@ class AdaptiveTwoPaneStrategy<T : Any>(
 
             else -> null
         }
+    }
+
+    companion object {
+        /* ------------------------------------------------------------------ */
+        /*  Metadata keys                                                     */
+        /* ------------------------------------------------------------------ */
+        const val KEY_TWO_PANE = "twoPane"      // true ⇢ destination wants to participate in a 2-pane scene
+        const val KEY_BOTTOM_BAR = "bottomBar"    // true ⇢ destination wants BottomBar to be shown
+        const val KEY_PLACEHOLDER = "placeholder"  // true ⇢ destination wants to show placeholder in second pane when alone
+
+        /* ------------------------------------------------------------------ */
+        /*  Helper functions for metadata                                     */
+        /* ------------------------------------------------------------------ */
+
+        /**
+         * Creates metadata for enabling placeholder in second pane
+         */
+        fun placeholder(): Map<String, Any> = mapOf(
+            KEY_PLACEHOLDER to true
+        )
+
+        /**
+         * Creates metadata for a screen with only bottom bar
+         */
+        fun bottomBar(): Map<String, Any> = mapOf(
+            KEY_BOTTOM_BAR to true
+        )
+
+        /**
+         * Creates metadata for a two-pane screen without bottom bar
+         */
+        fun twoPane(): Map<String, Any> = mapOf(
+            KEY_TWO_PANE to true
+        )
+
     }
 }
