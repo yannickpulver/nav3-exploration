@@ -47,6 +47,8 @@ class TopLevelBackStack<T : NavKey>(private val startKey: T) {
     }
 
     fun add(key: T) {
+
+
         topLevelBackStacks[topLevelKey]?.add(key)
         updateBackStack()
     }

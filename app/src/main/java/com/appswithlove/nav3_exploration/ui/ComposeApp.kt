@@ -1,4 +1,4 @@
-package com.appswithlove.nav3_exploration
+package com.appswithlove.nav3_exploration.ui
 
 import androidx.compose.animation.ContentTransform
 import androidx.compose.animation.ExperimentalSharedTransitionApi
@@ -21,7 +21,6 @@ import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.ProvidableCompositionLocal
 import androidx.compose.runtime.compositionLocalOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.saveable.Saver
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
@@ -40,9 +39,10 @@ import com.appswithlove.nav3_exploration.ui.navigation.Screens
 import com.appswithlove.nav3_exploration.ui.navigation.TopLevelBackStack
 import com.appswithlove.nav3_exploration.ui.navigation.rememberTopLevelBackStack
 import com.appswithlove.nav3_exploration.ui.navigation.sharedElementDecorator
+import com.appswithlove.nav3_exploration.ui.navigation.strategies.AdaptiveTwoPaneStrategy
+import com.appswithlove.nav3_exploration.ui.navigation.strategies.OverlaySceneStrategy
 import com.appswithlove.nav3_exploration.ui.overlay.Overlay
 import com.appswithlove.nav3_exploration.ui.profile.ProfileScreen
-import kotlinx.serialization.json.Json
 import kotlin.random.Random
 
 
@@ -62,16 +62,22 @@ fun ComposeApp() {
             val topLevelBackStack = rememberTopLevelBackStack(Screens.Home)
 
             val sceneStrategy = remember {
-                OverlaySceneStrategy<Any>().then(
-                    AdaptiveTwoPaneStrategy(
-                        bottomBar = {
-                            BottomBar(
-                                selected = topLevelBackStack.topLevelKey,
-                                navigate = { topLevelBackStack.switchTopLevel(it) })
-                        },
-                        placeholder = {
-                            PlaceholderPane()
-                        })
+                OverlaySceneStrategy<Any>(
+                    globalOnBack = {
+                        // required as otherwise it doesn't pr
+                        topLevelBackStack.removeLast()
+                    }
+                )
+                    .then(
+                        AdaptiveTwoPaneStrategy(
+                            bottomBar = {
+                                BottomBar(
+                                    selected = topLevelBackStack.topLevelKey,
+                                    navigate = { topLevelBackStack.switchTopLevel(it) })
+                            },
+                            placeholder = {
+                                PlaceholderPane()
+                            })
                 )
             }
 

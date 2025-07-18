@@ -1,7 +1,7 @@
 // Navigation3AdaptiveScenes.kt
 // Full drop-in implementation for Navigation 3 (alpha-01)
 
-package com.appswithlove.nav3_exploration
+package com.appswithlove.nav3_exploration.ui.navigation.strategies
 
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.layout.Column
@@ -15,11 +15,7 @@ import androidx.navigation3.runtime.NavEntry
 import androidx.navigation3.ui.Scene
 import androidx.navigation3.ui.SceneStrategy
 import androidx.window.core.layout.WindowSizeClass.Companion.WIDTH_DP_MEDIUM_LOWER_BOUND
-import com.appswithlove.nav3_exploration.AdaptiveTwoPaneStrategy.Companion.KEY_BOTTOM_BAR
 
-/* ------------------------------------------------------------------ */
-/*  Single-pane scene with optional BottomBar                         */
-/* ------------------------------------------------------------------ */
 class SingleEntryScene<T : Any>(
     override val key: Any,
     override val previousEntries: List<NavEntry<T>>,
@@ -42,16 +38,13 @@ class SingleEntryScene<T : Any>(
                     }
                 }
             }
-            AnimatedVisibility(entries.any { it.metadata.containsKey(KEY_BOTTOM_BAR) }) {
+            AnimatedVisibility(entries.any { it.metadata.containsKey(AdaptiveTwoPaneStrategy.Companion.KEY_BOTTOM_BAR) }) {
                 bottomBar?.invoke()
             }
         }
     }
 }
 
-/* ------------------------------------------------------------------ */
-/*  Two-pane scene with optional BottomBar                            */
-/* ------------------------------------------------------------------ */
 class TwoPaneScene<T : Any>(
     override val key: Any,
     override val previousEntries: List<NavEntry<T>>,
@@ -74,7 +67,7 @@ class TwoPaneScene<T : Any>(
                 Column(modifier = Modifier.weight(0.5f)) {
                     first.Content()
                 }
-                
+
                 // Second pane - either the actual entry or placeholder
                 Column(modifier = Modifier.weight(0.5f)) {
                     if (second != null) {
@@ -84,20 +77,13 @@ class TwoPaneScene<T : Any>(
                     }
                 }
             }
-            AnimatedVisibility(entries.any { it.metadata.containsKey(KEY_BOTTOM_BAR) }) {
+            AnimatedVisibility(entries.any { it.metadata.containsKey(AdaptiveTwoPaneStrategy.Companion.KEY_BOTTOM_BAR) }) {
                 bottomBar?.invoke()
             }
         }
     }
 }
 
-/* ------------------------------------------------------------------ */
-/*  Two-pane *or* single-pane strategy                                */
-/*  – Shows BottomBar if *any* of the top entries asks for it         */
-/*  – Creates a 2-pane scene only if                                 */
-/*       • window width ≥ medium breakpoint AND                       */
-/*       • BOTH top entries have KEY_TWO_PANE == true                 */
-/* ------------------------------------------------------------------ */
 class AdaptiveTwoPaneStrategy<T : Any>(
     private val bottomBar: @Composable () -> Unit,
     private val placeholder: (@Composable () -> Unit)? = null,
@@ -112,17 +98,16 @@ class AdaptiveTwoPaneStrategy<T : Any>(
     ): Scene<T>? {
         if (entries.isEmpty()) return null
         val last = entries.last()
-        
+
         val windowSize = currentWindowAdaptiveInfo().windowSizeClass
 
-        /* --- decide which scene shape we can support ---------------- */
         val canSplit = windowSize.isWidthAtLeastBreakpoint(minWidthBreakpoint)
 
         val lastTwo = if (canSplit && entries.size >= 2) entries.takeLast(2) else emptyList()
         val bothTwoPane = lastTwo.all { it.metadata[KEY_TWO_PANE] == true }
         val lastEntryTwoPane = last.metadata[KEY_TWO_PANE] == true
         val lastEntryWantsPlaceholder = last.metadata[KEY_PLACEHOLDER] == true
-        
+
         val showBottomBar =
             (entries.takeLast(if (canSplit && entries.size >= 2) 2 else 1))
                 .any { it.metadata[KEY_BOTTOM_BAR] == true }
@@ -138,7 +123,7 @@ class AdaptiveTwoPaneStrategy<T : Any>(
                     bottomBar = if (showBottomBar) bottomBar else null,
                 )
             }
-            
+
             /* 2-pane possible with single entry + placeholder */
             canSplit && lastEntryTwoPane && lastEntryWantsPlaceholder && placeholder != null -> {
                 TwoPaneScene(
@@ -156,7 +141,7 @@ class AdaptiveTwoPaneStrategy<T : Any>(
                 key = last.contentKey,
                 previousEntries = entries.dropLast(1),
                 entry = last,
-                bottomBar = if (showBottomBar) bottomBar else null
+                bottomBar = bottomBar
             )
 
             else -> null
@@ -164,37 +149,13 @@ class AdaptiveTwoPaneStrategy<T : Any>(
     }
 
     companion object {
-        /* ------------------------------------------------------------------ */
-        /*  Metadata keys                                                     */
-        /* ------------------------------------------------------------------ */
-        const val KEY_TWO_PANE = "twoPane"      // true ⇢ destination wants to participate in a 2-pane scene
-        const val KEY_BOTTOM_BAR = "bottomBar"    // true ⇢ destination wants BottomBar to be shown
-        const val KEY_PLACEHOLDER = "placeholder"  // true ⇢ destination wants to show placeholder in second pane when alone
+        const val KEY_TWO_PANE = "twoPane"
+        const val KEY_BOTTOM_BAR = "bottomBar"
+        const val KEY_PLACEHOLDER = "placeholder"
 
-        /* ------------------------------------------------------------------ */
-        /*  Helper functions for metadata                                     */
-        /* ------------------------------------------------------------------ */
-
-        /**
-         * Creates metadata for enabling placeholder in second pane
-         */
-        fun placeholder(): Map<String, Any> = mapOf(
-            KEY_PLACEHOLDER to true
-        )
-
-        /**
-         * Creates metadata for a screen with only bottom bar
-         */
-        fun bottomBar(): Map<String, Any> = mapOf(
-            KEY_BOTTOM_BAR to true
-        )
-
-        /**
-         * Creates metadata for a two-pane screen without bottom bar
-         */
-        fun twoPane(): Map<String, Any> = mapOf(
-            KEY_TWO_PANE to true
-        )
+        fun placeholder(): Map<String, Any> = mapOf(KEY_PLACEHOLDER to true)
+        fun bottomBar(): Map<String, Any> = mapOf(KEY_BOTTOM_BAR to true)
+        fun twoPane(): Map<String, Any> = mapOf(KEY_TWO_PANE to true)
 
     }
 }

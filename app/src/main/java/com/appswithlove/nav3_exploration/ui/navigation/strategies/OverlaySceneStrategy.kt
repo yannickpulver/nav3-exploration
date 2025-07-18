@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.appswithlove.nav3_exploration
+package com.appswithlove.nav3_exploration.ui.navigation.strategies
 
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -74,12 +74,12 @@ internal class OverlayScene<T : Any>(
 }
 
 /**
- * A [androidx.navigation3.ui.SceneStrategy] that displays entries that have added [overlay] to their [NavEntry.metadata]
+ * A [SceneStrategy] that displays entries that have added [overlay] to their [NavEntry.metadata]
  * within a [Dialog] instance on tablets or a [ModalBottomSheet] on mobile devices.
  *
  * This strategy should always be added before any non-overlay scene strategies.
  */
-public class OverlaySceneStrategy<T : Any>() : SceneStrategy<T> {
+public class OverlaySceneStrategy<T : Any>(private val globalOnBack: (Int) -> Unit) : SceneStrategy<T> {
     @OptIn(ExperimentalMaterial3WindowSizeClassApi::class)
     @Composable
     public override fun calculateScene(
@@ -99,7 +99,7 @@ public class OverlaySceneStrategy<T : Any>() : SceneStrategy<T> {
                 entry = lastEntry,
                 dialogProperties = properties,
                 isTablet = isTablet,
-                onBack = onBack,
+                onBack = globalOnBack, // required as otherwise it doesn't propagate the state to our toplevel backstack
             )
         }
     }
