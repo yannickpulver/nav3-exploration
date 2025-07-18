@@ -7,6 +7,7 @@ import androidx.compose.material.icons.filled.Person
 import androidx.compose.material3.Icon
 import androidx.compose.material3.NavigationBar
 import androidx.compose.material3.NavigationBarItem
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.navigation3.runtime.NavKey
@@ -35,7 +36,15 @@ fun BottomBar(selected: NavKey?, navigate: (NavKey) -> Unit, modifier: Modifier 
                         Icon(imageVector = iconVector, contentDescription = null)
                     },
                     selected = destination == selected,
-                    onClick = { navigate(destination) })
+                    onClick = { navigate(destination) },
+                    label = {
+                        val text = when (destination) {
+                            Screens.Home -> "Home"
+                            Screens.Profile -> "Profile"
+                            else -> "Home"
+                        }
+                        Text(text = text)
+                    })
             }
         }
     }

@@ -9,7 +9,6 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshots.SnapshotStateList
 import androidx.navigation3.runtime.NavKey
-import com.appswithlove.nav3_exploration.topLevelBackStackSaver
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
 
@@ -25,8 +24,11 @@ class TopLevelBackStack<T : NavKey>(private val startKey: T) {
     val backStack = mutableStateListOf<T>(startKey)
 
     private fun updateBackStack() {
+        println("Current backstack: $backStack")
         backStack.clear()
         val currentStack = topLevelBackStacks[topLevelKey] ?: emptyList()
+        println("CurrentStack backstack: $currentStack")
+
 
         if (topLevelKey == startKey) {
             backStack.addAll(currentStack)
