@@ -35,6 +35,7 @@ import androidx.navigation3.ui.SceneStrategy
 import androidx.navigation3.ui.rememberSceneSetupNavEntryDecorator
 import com.appswithlove.nav3_exploration.ui.detail.DetailScreen
 import com.appswithlove.nav3_exploration.ui.home.HomeScreen
+import com.appswithlove.nav3_exploration.ui.home.info.HomeInfoScreen
 import com.appswithlove.nav3_exploration.ui.navigation.BottomBar
 import com.appswithlove.nav3_exploration.ui.navigation.Screens
 import com.appswithlove.nav3_exploration.ui.navigation.TopLevelBackStack
@@ -94,28 +95,31 @@ private fun Navigation(
                             selected = topLevelBackStack.topLevelKey,
                             navigate = { topLevelBackStack.switchTopLevel(it) })
                     },
-                    detailPlaceholder = {
-                        PlaceholderPane()
-                    }
+                    detailPlaceholder = { PlaceholderPane() }
                 )) {
                 HomeScreen(
-                    openDetail = {
-                        topLevelBackStack.add(Screens.HomeDetail(Random.nextInt()))
-                    },
+                    openDetail = { topLevelBackStack.add(Screens.HomeDetail(Random.nextInt())) },
                     openDialog = { topLevelBackStack.add(Screens.Overlay) },
                 )
             }
 
             entry<Screens.HomeDetail>(metadata = ListDetailSceneStrategy.detailPane(sceneKey = "home")) {
                 DetailScreen(
-                    "Detail",
+                    "Home Detail",
                     back = {
                         // TODO: Check if we can somehow access the scenes calculateBack logic and use that here instead
                         while (topLevelBackStack.backStack.lastOrNull() is Screens.HomeDetail) {
                             topLevelBackStack.removeLast()
                         }
                     },
+                    openInfo = { topLevelBackStack.add(Screens.HomeInfo) },
                     color = MaterialTheme.colorScheme.primaryContainer
+                )
+            }
+
+            entry<Screens.HomeInfo>(metadata = ListDetailSceneStrategy.extraPane(sceneKey = "home")) {
+                HomeInfoScreen(
+                    back = { topLevelBackStack.removeLast() },
                 )
             }
 
@@ -133,21 +137,15 @@ private fun Navigation(
                     }
                 )) {
                 ProfileScreen(
-                    openDetail = {
-                        topLevelBackStack.add(Screens.ProfileDetail(Random.nextInt()))
-                    }
+                    openDetail = { topLevelBackStack.add(Screens.ProfileDetail(Random.nextInt())) }
                 )
             }
 
             entry<Screens.ProfileDetail> {
                 DetailScreen(
-                    "Detail",
-                    back = {
-                        // TODO: Check if we can somehow access the scenes calculateBack logic and use that here instead
-                        while (topLevelBackStack.backStack.lastOrNull() is Screens.ProfileDetail) {
-                            topLevelBackStack.removeLast()
-                        }
-                    },
+                    "Profile Detail",
+                    back = { topLevelBackStack.removeLast() },
+                    openInfo = { },
                     color = MaterialTheme.colorScheme.primaryContainer
                 )
             }

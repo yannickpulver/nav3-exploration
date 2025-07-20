@@ -127,6 +127,8 @@ fun topLevelBackStackSaver(): Saver<TopLevelBackStack<NavKey>, String> = topLeve
             is Screens.Profile -> "Profile"
             is Screens.Overlay -> "Overlay"
             is Screens.HomeDetail -> "HomeDetail:${navKey.id}"
+            is Screens.ProfileDetail -> "ProfileDetail:${navKey.id}"
+            is Screens.HomeInfo -> "HomeInfo"
             else -> throw IllegalArgumentException("Unknown NavKey type: $navKey")
         }
     },
@@ -139,7 +141,11 @@ fun topLevelBackStackSaver(): Saver<TopLevelBackStack<NavKey>, String> = topLeve
                 val id = serialized.substringAfter("HomeDetail:").toInt()
                 Screens.HomeDetail(id)
             }
-
+            serialized.startsWith("ProfileDetail:") -> {
+                val id = serialized.substringAfter("ProfileDetail:").toInt()
+                Screens.ProfileDetail(id)
+            }
+            serialized == "HomeInfo" -> Screens.HomeInfo
             else -> throw IllegalArgumentException("Unknown serialized NavKey: $serialized")
         }
     }

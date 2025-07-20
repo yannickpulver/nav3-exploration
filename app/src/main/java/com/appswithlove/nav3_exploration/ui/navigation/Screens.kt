@@ -12,6 +12,9 @@ object Screens {
     data class HomeDetail(val id: Int) : NavKey
 
     @Serializable
+    data object HomeInfo : NavKey
+
+    @Serializable
     data class ProfileDetail(val id: Int) : NavKey
 
     @Serializable

@@ -19,6 +19,7 @@ import org.koin.compose.viewmodel.koinViewModel
 fun DetailScreen(
     title: String = "Home",
     back: () -> Unit,
+    openInfo: () -> Unit,
     modifier: Modifier = Modifier,
     color: Color = MaterialTheme.colorScheme.background,
     viewModel: DetailViewModel = koinViewModel()
@@ -32,6 +33,9 @@ fun DetailScreen(
                 Text("id: ${state.id}")
                 OutlinedButton(onClick = back) {
                     Text("Back")
+                }
+                OutlinedButton(onClick = openInfo) {
+                    Text("Info")
                 }
             }
         }
