@@ -30,6 +30,9 @@ sealed interface Screens : NavKey {
     data object HomeInfo : Screens
 
     @Serializable
+    data object HomeMoreInfo : Screens
+
+    @Serializable
     data class ProfileDetail(val id: Int) : Screens
 
     @Serializable
@@ -44,6 +47,7 @@ sealed interface Screens : NavKey {
             is Home -> ScreenWrapper("Home", Json.encodeToString(this))
             is HomeDetail -> ScreenWrapper("HomeDetail", Json.encodeToString(this))
             is HomeInfo -> ScreenWrapper("HomeInfo", Json.encodeToString(this))
+            is HomeMoreInfo -> ScreenWrapper("HomeMoreInfo", Json.encodeToString(this))
             is Overlay -> ScreenWrapper("Overlay", Json.encodeToString(this))
             is Profile -> ScreenWrapper("Profile", Json.encodeToString(this))
             is ProfileDetail -> ScreenWrapper("ProfileDetail", Json.encodeToString(this))
@@ -63,6 +67,7 @@ sealed interface Screens : NavKey {
                 "Home" -> Json.decodeFromString<Home>(wrapper.data)
                 "HomeDetail" -> Json.decodeFromString<HomeDetail>(wrapper.data)
                 "HomeInfo" -> Json.decodeFromString<HomeInfo>(wrapper.data)
+                "HomeMoreInfo" -> Json.decodeFromString<HomeMoreInfo>(wrapper.data)
                 "Overlay" -> Json.decodeFromString<Overlay>(wrapper.data)
                 "Profile" -> Json.decodeFromString<Profile>(wrapper.data)
                 "ProfileDetail" -> Json.decodeFromString<ProfileDetail>(wrapper.data)

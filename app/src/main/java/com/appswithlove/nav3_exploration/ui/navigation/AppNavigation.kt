@@ -9,13 +9,7 @@ import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.scaleIn
 import androidx.compose.animation.scaleOut
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Surface
-import androidx.compose.material3.Text
 import androidx.compose.material3.adaptive.ExperimentalMaterial3AdaptiveApi
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
@@ -23,9 +17,6 @@ import androidx.compose.runtime.ProvidableCompositionLocal
 import androidx.compose.runtime.compositionLocalOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
-import androidx.compose.ui.Alignment
-import androidx.compose.ui.Modifier
-import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.navigation3.rememberViewModelStoreNavEntryDecorator
 import androidx.navigation3.runtime.NavKey
@@ -39,6 +30,7 @@ import com.appswithlove.nav3_exploration.ui.detail.DetailScreen
 import com.appswithlove.nav3_exploration.ui.home.HomeScreen
 import com.appswithlove.nav3_exploration.ui.home.PlaceholderPane
 import com.appswithlove.nav3_exploration.ui.home.info.HomeInfoScreen
+import com.appswithlove.nav3_exploration.ui.home.info.HomeMoreInfoScreen
 import com.appswithlove.nav3_exploration.ui.loading.LoadingScreen
 import com.appswithlove.nav3_exploration.ui.login.LoginScreen
 import com.appswithlove.nav3_exploration.ui.navigation.strategies.OverlaySceneStrategy
@@ -128,7 +120,7 @@ private fun Navigation(
                     "Home Detail",
                     back = {
                         // TODO: Check if we can somehow access the scenes calculateBack logic and use that here instead
-                        while (topLevelBackStack.backStack.lastOrNull() is Screens.HomeDetail) {
+                        while (topLevelBackStack.backStack.any { it is Screens.HomeDetail }) {
                             topLevelBackStack.removeLast()
                         }
                     },
@@ -139,6 +131,13 @@ private fun Navigation(
 
             entry<Screens.HomeInfo>(metadata = ListDetailSceneStrategy.extraPane(sceneKey = "home")) {
                 HomeInfoScreen(
+                    back = { topLevelBackStack.removeLast() },
+                    openMoreInfo = { topLevelBackStack.add(Screens.HomeMoreInfo) },
+                )
+            }
+
+            entry<Screens.HomeMoreInfo>(metadata = ListDetailSceneStrategy.extraPane(sceneKey = "home")) {
+                HomeMoreInfoScreen(
                     back = { topLevelBackStack.removeLast() },
                 )
             }
