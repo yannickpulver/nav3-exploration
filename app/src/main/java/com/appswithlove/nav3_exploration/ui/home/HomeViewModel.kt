@@ -2,6 +2,9 @@ package com.appswithlove.nav3_exploration.ui.home
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.appswithlove.nav3_exploration.ui.login.Login
+import com.russhwolf.settings.ObservableSettings
+import com.russhwolf.settings.Settings
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.stateIn
@@ -13,7 +16,7 @@ data class HomeState(
 )
 
 
-class HomeViewModel : ViewModel() {
+class HomeViewModel(private val settings: ObservableSettings) : ViewModel() {
 
     val homeState = HomeState()
 
@@ -24,4 +27,8 @@ class HomeViewModel : ViewModel() {
             initialValue = homeState
         )
 
+
+    fun logout() {
+        settings.putBoolean(Login.key, false)
+    }
 }

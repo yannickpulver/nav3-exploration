@@ -60,14 +60,12 @@ dependencies {
     debugImplementation(libs.androidx.ui.test.manifest)
     implementation(libs.androidx.material3.adaptive.navigation.suite)
     implementation(libs.androidx.material.icons.extended)
-
     implementation(libs.kotlinx.serialization.core)
     implementation(libs.kotlinx.serialization.json)
-
     implementation(libs.koin.compose)
     implementation(libs.koin.compose.viewmodel)
-
-
+    implementation(libs.multiplatform.settings)
+    implementation(libs.multiplatform.settings.coroutines)
     implementation(libs.androidx.navigation3.runtime)
     implementation(libs.androidx.navigation3.ui)
     implementation(libs.androidx.material3.windowsizeclass)

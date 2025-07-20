@@ -79,7 +79,7 @@ class TopLevelBackStack<T : NavKey>(private val startKey: T) {
 
 @Composable
 fun rememberTopLevelBackStack(startKey: Screens): TopLevelBackStack<NavKey> {
-    return rememberSaveable(saver = topLevelBackStackSaver()) { TopLevelBackStack(startKey) }
+    return rememberSaveable(startKey, saver = topLevelBackStackSaver()) { TopLevelBackStack(startKey) }
 }
 
 // Data class to represent the saveable state of TopLevelBackStack

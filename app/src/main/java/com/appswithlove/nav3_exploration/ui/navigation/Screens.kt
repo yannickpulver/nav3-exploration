@@ -2,7 +2,6 @@ package com.appswithlove.nav3_exploration.ui.navigation
 
 import androidx.navigation3.runtime.NavKey
 import kotlinx.serialization.Serializable
-import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 
 @Serializable
@@ -14,6 +13,13 @@ private data class ScreenWrapper(
 
 @Serializable
 sealed interface Screens : NavKey {
+
+    @Serializable
+    object Loading : Screens
+
+    @Serializable
+    object Login : Screens
+
     @Serializable
     object Home : Screens
 
@@ -32,24 +38,28 @@ sealed interface Screens : NavKey {
     @Serializable
     data object Overlay : Screens
 
-
     fun serialize(): String {
         val wrapper = when (this) {
+            is Login -> ScreenWrapper("Login", Json.encodeToString(this))
             is Home -> ScreenWrapper("Home", Json.encodeToString(this))
             is HomeDetail -> ScreenWrapper("HomeDetail", Json.encodeToString(this))
             is HomeInfo -> ScreenWrapper("HomeInfo", Json.encodeToString(this))
             is Overlay -> ScreenWrapper("Overlay", Json.encodeToString(this))
             is Profile -> ScreenWrapper("Profile", Json.encodeToString(this))
             is ProfileDetail -> ScreenWrapper("ProfileDetail", Json.encodeToString(this))
+            is Loading -> ScreenWrapper("Loading", Json.encodeToString(this))
         }
         return Json.encodeToString(wrapper)
     }
+
     companion object {
         val bottombarItems = listOf(Home, Profile)
-        
+
         fun deserialize(serialized: String): Screens {
             val wrapper = Json.decodeFromString<ScreenWrapper>(serialized)
             return when (wrapper.type) {
+                "Loading" -> Json.decodeFromString<Loading>(wrapper.data)
+                "Login" -> Json.decodeFromString<Login>(wrapper.data)
                 "Home" -> Json.decodeFromString<Home>(wrapper.data)
                 "HomeDetail" -> Json.decodeFromString<HomeDetail>(wrapper.data)
                 "HomeInfo" -> Json.decodeFromString<HomeInfo>(wrapper.data)

@@ -12,7 +12,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.navigation3.runtime.NavKey
 import androidx.navigation3.ui.LocalNavAnimatedContentScope
-import com.appswithlove.nav3_exploration.ui.LocalSharedTransitionScope
 
 @OptIn(ExperimentalSharedTransitionApi::class)
 @Composable

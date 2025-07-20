@@ -1,4 +1,4 @@
-package com.appswithlove.nav3_exploration.ui
+package com.appswithlove.nav3_exploration.ui.navigation
 
 import androidx.compose.animation.ContentTransform
 import androidx.compose.animation.ExperimentalSharedTransitionApi
@@ -21,10 +21,12 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.ProvidableCompositionLocal
 import androidx.compose.runtime.compositionLocalOf
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.navigation3.rememberViewModelStoreNavEntryDecorator
 import androidx.navigation3.runtime.NavKey
 import androidx.navigation3.runtime.entry
@@ -35,16 +37,16 @@ import androidx.navigation3.ui.SceneStrategy
 import androidx.navigation3.ui.rememberSceneSetupNavEntryDecorator
 import com.appswithlove.nav3_exploration.ui.detail.DetailScreen
 import com.appswithlove.nav3_exploration.ui.home.HomeScreen
+import com.appswithlove.nav3_exploration.ui.home.PlaceholderPane
 import com.appswithlove.nav3_exploration.ui.home.info.HomeInfoScreen
-import com.appswithlove.nav3_exploration.ui.navigation.BottomBar
-import com.appswithlove.nav3_exploration.ui.navigation.Screens
-import com.appswithlove.nav3_exploration.ui.navigation.TopLevelBackStack
-import com.appswithlove.nav3_exploration.ui.navigation.rememberTopLevelBackStack
+import com.appswithlove.nav3_exploration.ui.loading.LoadingScreen
+import com.appswithlove.nav3_exploration.ui.login.LoginScreen
 import com.appswithlove.nav3_exploration.ui.navigation.strategies.OverlaySceneStrategy
 import com.appswithlove.nav3_exploration.ui.navigation.strategies.listdetail.ListDetailSceneStrategy
 import com.appswithlove.nav3_exploration.ui.navigation.strategies.listdetail.rememberListDetailSceneStrategy
 import com.appswithlove.nav3_exploration.ui.overlay.Overlay
 import com.appswithlove.nav3_exploration.ui.profile.ProfileScreen
+import org.koin.compose.viewmodel.koinViewModel
 import kotlin.random.Random
 
 
@@ -56,12 +58,21 @@ val LocalSharedTransitionScope: ProvidableCompositionLocal<SharedTransitionScope
         )
     }
 
-@OptIn(ExperimentalSharedTransitionApi::class, ExperimentalMaterial3AdaptiveApi::class)
 @Composable
-fun ComposeApp() {
+@OptIn(ExperimentalSharedTransitionApi::class, ExperimentalMaterial3AdaptiveApi::class)
+fun AppNavigation(viewModel: RouteViewModel = koinViewModel()) {
+    val isLoggedIn by viewModel.state.collectAsStateWithLifecycle()
+
     SharedTransitionLayout {
         CompositionLocalProvider(LocalSharedTransitionScope provides this) {
-            val topLevelBackStack = rememberTopLevelBackStack(Screens.Home)
+            val topLevelBackStack =
+                rememberTopLevelBackStack(
+                    when (isLoggedIn) {
+                        true -> Screens.Home
+                        false -> Screens.Login
+                        else -> Screens.Loading
+                    }
+                )
 
             val overlaySceneStrategy = remember { OverlaySceneStrategy<Any>() }
             val listDetailSceneStrategy = rememberListDetailSceneStrategy<Any>()
@@ -76,8 +87,9 @@ fun ComposeApp() {
 @Composable
 private fun Navigation(
     topLevelBackStack: TopLevelBackStack<NavKey>,
-    sceneStrategy: SceneStrategy<Any>
+    sceneStrategy: SceneStrategy<Any>,
 ) {
+
     NavDisplay(
         backStack = topLevelBackStack.backStack,
         onBack = { keysToRemove -> repeat(keysToRemove) { topLevelBackStack.removeLast() } },
@@ -87,6 +99,14 @@ private fun Navigation(
             rememberViewModelStoreNavEntryDecorator(),
         ),
         entryProvider = entryProvider {
+            entry<Screens.Loading> {
+                LoadingScreen()
+            }
+
+            entry<Screens.Login> {
+                LoginScreen()
+            }
+
             entry<Screens.Home>(
                 metadata = ListDetailSceneStrategy.listPane(
                     sceneKey = "home",
@@ -174,32 +194,6 @@ fun fadeOnly() = NavDisplay.transitionSpec {
         targetContentEnter = fadeIn(animationSpec = tween(200)),
         initialContentExit = fadeOut(animationSpec = tween(200))
     )
-}
-
-@Composable
-private fun PlaceholderPane(modifier: Modifier = Modifier) {
-    Surface(
-        modifier = modifier.fillMaxSize(), color = MaterialTheme.colorScheme.surfaceVariant
-    ) {
-        Box(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(16.dp), contentAlignment = Alignment.Center
-        ) {
-            Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                Text(
-                    text = "Select an item",
-                    style = MaterialTheme.typography.headlineSmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
-                Text(
-                    text = "Tap 'Open Detail' to view details here",
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f)
-                )
-            }
-        }
-    }
 }
 
 
