@@ -9,6 +9,7 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshots.SnapshotStateList
 import androidx.navigation3.runtime.NavKey
+import com.appswithlove.nav3_exploration.ui.navigation.Screens.Companion.serialize
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
 
@@ -25,7 +26,9 @@ class TopLevelBackStack<T : NavKey>(private val startKey: T) {
 
     // Internal access for the saver
     internal fun getStartKey(): T = startKey
-    internal fun getAllBackStacks(): Map<T, List<T>> = topLevelBackStacks.mapValues { it.value.toList() }
+    internal fun getAllBackStacks(): Map<T, List<T>> =
+        topLevelBackStacks.mapValues { it.value.toList() }
+
     internal fun restoreBackStacks(backStacks: Map<T, List<T>>) {
         topLevelBackStacks.clear()
         backStacks.forEach { (key, stack) ->
@@ -81,7 +84,7 @@ class TopLevelBackStack<T : NavKey>(private val startKey: T) {
 }
 
 @Composable
-fun rememberTopLevelBackStack(startKey: NavKey): TopLevelBackStack<NavKey> {
+fun rememberTopLevelBackStack(startKey: Screens): TopLevelBackStack<NavKey> {
     return rememberSaveable(saver = topLevelBackStackSaver()) { TopLevelBackStack(startKey) }
 }
 
@@ -117,7 +120,7 @@ fun <T : NavKey> topLevelBackStackSaver(
             val restoredBackStacks = state.topLevelBackStacks.mapKeys { deserialize(it.key) }
                 .mapValues { it.value.map { key -> deserialize(key) } }
             restoreBackStacks(restoredBackStacks)
-            
+
             // Set the current top level key - this will also call updateBackStack
             if (topLevelKey != startKey) {
                 switchTopLevel(topLevelKey)
@@ -128,34 +131,15 @@ fun <T : NavKey> topLevelBackStackSaver(
     }
 )
 
-// Helper function to create saver for Screens NavKey types
+// Helper function to create saver for Screens types  
 fun topLevelBackStackSaver(): Saver<TopLevelBackStack<NavKey>, String> = topLevelBackStackSaver(
     serialize = { navKey ->
         when (navKey) {
-            is Screens.Home -> "Home"
-            is Screens.Profile -> "Profile"
-            is Screens.Overlay -> "Overlay"
-            is Screens.HomeDetail -> "HomeDetail:${navKey.id}"
-            is Screens.ProfileDetail -> "ProfileDetail:${navKey.id}"
-            is Screens.HomeInfo -> "HomeInfo"
+            is Screens -> navKey.serialize()
             else -> throw IllegalArgumentException("Unknown NavKey type: $navKey")
         }
     },
     deserialize = { serialized ->
-        when {
-            serialized == "Home" -> Screens.Home
-            serialized == "Profile" -> Screens.Profile
-            serialized == "Overlay" -> Screens.Overlay
-            serialized.startsWith("HomeDetail:") -> {
-                val id = serialized.substringAfter("HomeDetail:").toInt()
-                Screens.HomeDetail(id)
-            }
-            serialized.startsWith("ProfileDetail:") -> {
-                val id = serialized.substringAfter("ProfileDetail:").toInt()
-                Screens.ProfileDetail(id)
-            }
-            serialized == "HomeInfo" -> Screens.HomeInfo
-            else -> throw IllegalArgumentException("Unknown serialized NavKey: $serialized")
-        }
+        Screens.deserialize(serialized)
     }
 )
