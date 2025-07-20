@@ -9,8 +9,8 @@ This project showcases more complex layouts that can be built with `Navigation 3
 showcase how to share components across scenes (e.g. a `BottomBar`) and not having to declare it
 globally. It uses two strategies `AdaptiveTwoPaneStrategy` and `OverlaySceneStrategy`.
 
-### **AdaptiveTwoPaneStrategy**
-
+### **ListDetailSceneStrategy**
+- Inspired by [adaptive-navigation3](https://android.googlesource.com/platform/frameworks/support/+/refs/heads/androidx-main/compose/material3/adaptive/adaptive-navigation3/src/androidMain/kotlin/androidx/compose/material3/adaptive/navigation3)
 - Automatically switches between single-pane and two-pane layouts based on screen size
 - Displays bottom navigation bar when needed (stretches over two pane if one of both panes requires
   it)
@@ -22,7 +22,7 @@ globally. It uses two strategies `AdaptiveTwoPaneStrategy` and `OverlaySceneStra
 - Shows content as bottom sheets on mobile devices
 
 ### **TopLevelBackStack**
-
+[nav3-recipes](../../../android/nav3-recipes)
 - Inspired
   by [@kotlearn's jetpack-navigation-3-alpha](https://github.com/kotlearn/jetpack-navigation-3-alpha)
 - Maintains separate navigation stacks for each top-level destination (Home, Profile)

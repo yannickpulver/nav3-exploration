@@ -79,7 +79,7 @@ internal class OverlayScene<T : Any>(
  *
  * This strategy should always be added before any non-overlay scene strategies.
  */
-public class OverlaySceneStrategy<T : Any>(private val globalOnBack: (Int) -> Unit) : SceneStrategy<T> {
+public class OverlaySceneStrategy<T : Any>() : SceneStrategy<T> {
     @OptIn(ExperimentalMaterial3WindowSizeClassApi::class)
     @Composable
     public override fun calculateScene(
@@ -99,7 +99,7 @@ public class OverlaySceneStrategy<T : Any>(private val globalOnBack: (Int) -> Un
                 entry = lastEntry,
                 dialogProperties = properties,
                 isTablet = isTablet,
-                onBack = globalOnBack, // required as otherwise it doesn't propagate the state to our toplevel backstack
+                onBack = onBack,
             )
         }
     }

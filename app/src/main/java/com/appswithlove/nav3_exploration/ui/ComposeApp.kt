@@ -16,6 +16,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.material3.adaptive.ExperimentalMaterial3AdaptiveApi
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.ProvidableCompositionLocal
@@ -38,9 +39,9 @@ import com.appswithlove.nav3_exploration.ui.navigation.BottomBar
 import com.appswithlove.nav3_exploration.ui.navigation.Screens
 import com.appswithlove.nav3_exploration.ui.navigation.TopLevelBackStack
 import com.appswithlove.nav3_exploration.ui.navigation.rememberTopLevelBackStack
-import com.appswithlove.nav3_exploration.ui.navigation.sharedElementDecorator
-import com.appswithlove.nav3_exploration.ui.navigation.strategies.AdaptiveTwoPaneStrategy
 import com.appswithlove.nav3_exploration.ui.navigation.strategies.OverlaySceneStrategy
+import com.appswithlove.nav3_exploration.ui.navigation.strategies.listdetail.ListDetailSceneStrategy
+import com.appswithlove.nav3_exploration.ui.navigation.strategies.listdetail.rememberListDetailSceneStrategy
 import com.appswithlove.nav3_exploration.ui.overlay.Overlay
 import com.appswithlove.nav3_exploration.ui.profile.ProfileScreen
 import kotlin.random.Random
@@ -54,39 +55,23 @@ val LocalSharedTransitionScope: ProvidableCompositionLocal<SharedTransitionScope
         )
     }
 
-@OptIn(ExperimentalSharedTransitionApi::class)
+@OptIn(ExperimentalSharedTransitionApi::class, ExperimentalMaterial3AdaptiveApi::class)
 @Composable
 fun ComposeApp() {
     SharedTransitionLayout {
         CompositionLocalProvider(LocalSharedTransitionScope provides this) {
             val topLevelBackStack = rememberTopLevelBackStack(Screens.Home)
 
-            val sceneStrategy = remember {
-                OverlaySceneStrategy<Any>(
-                    globalOnBack = {
-                        // required as otherwise it doesn't pr
-                        topLevelBackStack.removeLast()
-                    }
-                )
-                    .then(
-                        AdaptiveTwoPaneStrategy(
-                            bottomBar = {
-                                BottomBar(
-                                    selected = topLevelBackStack.topLevelKey,
-                                    navigate = { topLevelBackStack.switchTopLevel(it) })
-                            },
-                            placeholder = {
-                                PlaceholderPane()
-                            })
-                )
-            }
+            val overlaySceneStrategy = remember { OverlaySceneStrategy<Any>() }
+            val listDetailSceneStrategy = rememberListDetailSceneStrategy<Any>()
+            val sceneStrategy = remember { overlaySceneStrategy.then(listDetailSceneStrategy) }
 
             Navigation(topLevelBackStack, sceneStrategy)
         }
     }
 }
 
-@OptIn(ExperimentalSharedTransitionApi::class)
+@OptIn(ExperimentalSharedTransitionApi::class, ExperimentalMaterial3AdaptiveApi::class)
 @Composable
 private fun Navigation(
     topLevelBackStack: TopLevelBackStack<NavKey>,
@@ -94,30 +79,42 @@ private fun Navigation(
 ) {
     NavDisplay(
         backStack = topLevelBackStack.backStack,
+        onBack = { keysToRemove -> repeat(keysToRemove) { topLevelBackStack.removeLast() } },
         entryDecorators = listOf(
-            sharedElementDecorator(),
             rememberSceneSetupNavEntryDecorator(),
             rememberSavedStateNavEntryDecorator(),
             rememberViewModelStoreNavEntryDecorator(),
         ),
         entryProvider = entryProvider {
-            entry<Screens.Home>(metadata = AdaptiveTwoPaneStrategy.twoPane() + AdaptiveTwoPaneStrategy.bottomBar() + AdaptiveTwoPaneStrategy.placeholder() + fadeOnly()) {
+            entry<Screens.Home>(
+                metadata = ListDetailSceneStrategy.listPane(
+                    sceneKey = "home",
+                    bottomBar = {
+                        BottomBar(
+                            selected = topLevelBackStack.topLevelKey,
+                            navigate = { topLevelBackStack.switchTopLevel(it) })
+                    },
+                    detailPlaceholder = {
+                        PlaceholderPane()
+                    }
+                )) {
                 HomeScreen(
                     openDetail = {
-                        println("Opening detail. lastOrNull: ${topLevelBackStack.backStack.lastOrNull()}")
-                        if (topLevelBackStack.backStack.lastOrNull() is Screens.HomeDetail) {
-                            topLevelBackStack.removeLast()
-                        }
                         topLevelBackStack.add(Screens.HomeDetail(Random.nextInt()))
                     },
                     openDialog = { topLevelBackStack.add(Screens.Overlay) },
                 )
             }
 
-            entry<Screens.HomeDetail>(metadata = AdaptiveTwoPaneStrategy.twoPane()) {
+            entry<Screens.HomeDetail>(metadata = ListDetailSceneStrategy.detailPane(sceneKey = "home")) {
                 DetailScreen(
                     "Detail",
-                    back = { topLevelBackStack.removeLast() },
+                    back = {
+                        // TODO: Check if we can somehow access the scenes calculateBack logic and use that here instead
+                        while (topLevelBackStack.backStack.lastOrNull() is Screens.HomeDetail) {
+                            topLevelBackStack.removeLast()
+                        }
+                    },
                     color = MaterialTheme.colorScheme.primaryContainer
                 )
             }
@@ -126,14 +123,32 @@ private fun Navigation(
                 Overlay(close = { topLevelBackStack.removeLast() })
             }
 
-            entry<Screens.Profile>(metadata = AdaptiveTwoPaneStrategy.bottomBar() + fadeOnly()) {
+            entry<Screens.Profile>(
+                metadata = ListDetailSceneStrategy.listPane(
+                    sceneKey = "profile",
+                    bottomBar = {
+                        BottomBar(
+                            selected = topLevelBackStack.topLevelKey,
+                            navigate = { topLevelBackStack.switchTopLevel(it) })
+                    }
+                )) {
                 ProfileScreen(
                     openDetail = {
-                        if (topLevelBackStack.backStack.lastOrNull() is Screens.HomeDetail) {
+                        topLevelBackStack.add(Screens.ProfileDetail(Random.nextInt()))
+                    }
+                )
+            }
+
+            entry<Screens.ProfileDetail> {
+                DetailScreen(
+                    "Detail",
+                    back = {
+                        // TODO: Check if we can somehow access the scenes calculateBack logic and use that here instead
+                        while (topLevelBackStack.backStack.lastOrNull() is Screens.ProfileDetail) {
                             topLevelBackStack.removeLast()
                         }
-                        topLevelBackStack.add(Screens.HomeDetail(Random.nextInt()))
-                    }
+                    },
+                    color = MaterialTheme.colorScheme.primaryContainer
                 )
             }
         },
@@ -141,7 +156,6 @@ private fun Navigation(
         transitionSpec = { bouncy() },
         popTransitionSpec = { bouncy() })
 }
-
 
 private fun bouncy(): ContentTransform = ContentTransform(
     targetContentEnter = scaleIn(animationSpec = tween(150), initialScale = 0.8f) + fadeIn(
@@ -189,4 +203,5 @@ private fun PlaceholderPane(modifier: Modifier = Modifier) {
         }
     }
 }
+
 
