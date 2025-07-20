@@ -87,6 +87,7 @@ public class ListDetailSceneStrategy<T : Any>(
         val scaffoldEntryIndices = mutableIntListOf()
         var detailPlaceholder: (@Composable ThreePaneScaffoldScope.() -> Unit)? = null
         var bottomBar: (@Composable () -> Unit)? = null
+        var header: (@Composable () -> Unit)? = null
         for ((index, entry) in entries.withIndex()) {
             val paneMetadata = entry.metadata[ListDetailRoleKey] as? PaneMetadata
             if (paneMetadata != null && paneMetadata.sceneKey == sceneKey) {
@@ -95,6 +96,7 @@ public class ListDetailSceneStrategy<T : Any>(
                 if (paneMetadata is ListMetadata) {
                     detailPlaceholder = paneMetadata.detailPlaceholder
                     bottomBar = paneMetadata.bottomBar
+                    header = paneMetadata.header
                 }
             }
         }
@@ -110,6 +112,7 @@ public class ListDetailSceneStrategy<T : Any>(
                 scaffoldEntryIndices = scaffoldEntryIndices,
                 detailPlaceholder = detailPlaceholder ?: {},
                 bottomBar = bottomBar ?: {},
+                header = header
             )
 
         if (scene.currentScaffoldValue.paneCount < 1) {
@@ -126,6 +129,7 @@ public class ListDetailSceneStrategy<T : Any>(
         override val sceneKey: Any,
         val detailPlaceholder: @Composable ThreePaneScaffoldScope.() -> Unit,
         val bottomBar: @Composable () -> Unit = {},
+        val header: (@Composable () -> Unit)? = null,
     ) : PaneMetadata
 
     internal class DetailMetadata(override val sceneKey: Any) : PaneMetadata
@@ -146,8 +150,10 @@ public class ListDetailSceneStrategy<T : Any>(
         public fun listPane(
             sceneKey: Any = Unit,
             detailPlaceholder: @Composable ThreePaneScaffoldScope.() -> Unit = {},
+            header: (@Composable () -> Unit)? = null,
             bottomBar: @Composable () -> Unit = {},
-        ): Map<String, Any> = mapOf(ListDetailRoleKey to ListMetadata(sceneKey, detailPlaceholder, bottomBar))
+        ): Map<String, Any> =
+            mapOf(ListDetailRoleKey to ListMetadata(sceneKey, detailPlaceholder, bottomBar, header))
 
         /**
          * Constructs metadata to mark a [NavEntry] as belonging to a

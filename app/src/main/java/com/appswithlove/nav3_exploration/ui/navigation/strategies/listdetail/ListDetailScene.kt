@@ -42,6 +42,7 @@ internal class ListDetailScene<T : Any>(
     val scaffoldEntryIndices: IntList,
     val detailPlaceholder: @Composable ThreePaneScaffoldScope.() -> Unit,
     val bottomBar: @Composable () -> Unit,
+    val header: (@Composable () -> Unit)?,
 ) : Scene<T> {
     override val entries: List<NavEntry<T>>
         get() = scaffoldEntries
@@ -187,6 +188,7 @@ internal class ListDetailScene<T : Any>(
         val lastDetail = entries.findLast { it.paneRole == ListDetailPaneScaffoldRole.Detail }
         val lastExtra = entries.findLast { it.paneRole == ListDetailPaneScaffoldRole.Extra }
         Column {
+            header?.invoke()
             ListDetailPaneScaffold(
                 directive = directive,
                 scaffoldState = scaffoldState,

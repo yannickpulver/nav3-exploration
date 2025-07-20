@@ -9,7 +9,10 @@ import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.scaleIn
 import androidx.compose.animation.scaleOut
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Text
+import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.adaptive.ExperimentalMaterial3AdaptiveApi
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
@@ -75,7 +78,9 @@ fun AppNavigation(viewModel: RouteViewModel = koinViewModel()) {
     }
 }
 
-@OptIn(ExperimentalSharedTransitionApi::class, ExperimentalMaterial3AdaptiveApi::class)
+@OptIn(ExperimentalSharedTransitionApi::class, ExperimentalMaterial3AdaptiveApi::class,
+    ExperimentalMaterial3Api::class
+)
 @Composable
 private fun Navigation(
     topLevelBackStack: TopLevelBackStack<NavKey>,
@@ -106,6 +111,11 @@ private fun Navigation(
                         BottomBar(
                             selected = topLevelBackStack.topLevelKey,
                             navigate = { topLevelBackStack.switchTopLevel(it) })
+                    },
+                    header = {
+                        TopAppBar(
+                            title = { Text("Home") },
+                        )
                     },
                     detailPlaceholder = { PlaceholderPane() }
                 )) {
@@ -147,6 +157,7 @@ private fun Navigation(
             }
 
             entry<Screens.Profile>(
+                // here we're currently just using listPane to display the bottomBar. Unsure if we should put that to a seperate Strategry
                 metadata = ListDetailSceneStrategy.listPane(
                     sceneKey = "profile",
                     bottomBar = {
