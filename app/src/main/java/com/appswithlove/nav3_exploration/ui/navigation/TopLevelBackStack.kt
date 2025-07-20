@@ -9,7 +9,6 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshots.SnapshotStateList
 import androidx.navigation3.runtime.NavKey
-import com.appswithlove.nav3_exploration.ui.navigation.Screens.Companion.serialize
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
 
@@ -37,11 +36,8 @@ class TopLevelBackStack<T : NavKey>(private val startKey: T) {
     }
 
     internal fun updateBackStack() {
-        println("Current backstack: $backStack")
         backStack.clear()
         val currentStack = topLevelBackStacks[topLevelKey] ?: emptyList()
-        println("CurrentStack backstack: $currentStack")
-
 
         if (topLevelKey == startKey) {
             backStack.addAll(currentStack)
@@ -60,8 +56,6 @@ class TopLevelBackStack<T : NavKey>(private val startKey: T) {
     }
 
     fun add(key: T) {
-
-
         topLevelBackStacks[topLevelKey]?.add(key)
         updateBackStack()
     }
@@ -116,16 +110,14 @@ fun <T : NavKey> topLevelBackStackSaver(
         val topLevelKey = deserialize(state.topLevelKey)
 
         TopLevelBackStack(startKey).apply {
-            // Restore all backstacks
             val restoredBackStacks = state.topLevelBackStacks.mapKeys { deserialize(it.key) }
                 .mapValues { it.value.map { key -> deserialize(key) } }
             restoreBackStacks(restoredBackStacks)
 
-            // Set the current top level key - this will also call updateBackStack
             if (topLevelKey != startKey) {
                 switchTopLevel(topLevelKey)
             } else {
-                updateBackStack() // Still need to update if we're staying on start key
+                updateBackStack()
             }
         }
     }
