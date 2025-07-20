@@ -23,7 +23,17 @@ class TopLevelBackStack<T : NavKey>(private val startKey: T) {
 
     val backStack = mutableStateListOf<T>(startKey)
 
-    private fun updateBackStack() {
+    // Internal access for the saver
+    internal fun getStartKey(): T = startKey
+    internal fun getAllBackStacks(): Map<T, List<T>> = topLevelBackStacks.mapValues { it.value.toList() }
+    internal fun restoreBackStacks(backStacks: Map<T, List<T>>) {
+        topLevelBackStacks.clear()
+        backStacks.forEach { (key, stack) ->
+            topLevelBackStacks[key] = mutableStateListOf<T>().apply { addAll(stack) }
+        }
+    }
+
+    internal fun updateBackStack() {
         println("Current backstack: $backStack")
         backStack.clear()
         val currentStack = topLevelBackStacks[topLevelKey] ?: emptyList()
@@ -90,11 +100,10 @@ fun <T : NavKey> topLevelBackStackSaver(
 ): Saver<TopLevelBackStack<T>, String> = Saver(
     save = { backStack ->
         val state = TopLevelBackStackState(
-            startKey = serialize(backStack.backStack.first()), // The start key is always first
+            startKey = serialize(backStack.getStartKey()),
             topLevelKey = serialize(backStack.topLevelKey),
-            topLevelBackStacks = mapOf(
-                serialize(backStack.topLevelKey) to backStack.backStack.map { serialize(it) }
-            )
+            topLevelBackStacks = backStack.getAllBackStacks().mapKeys { serialize(it.key) }
+                .mapValues { it.value.map { key -> serialize(key) } }
         )
         Json.encodeToString(state)
     },
@@ -104,16 +113,16 @@ fun <T : NavKey> topLevelBackStackSaver(
         val topLevelKey = deserialize(state.topLevelKey)
 
         TopLevelBackStack(startKey).apply {
+            // Restore all backstacks
+            val restoredBackStacks = state.topLevelBackStacks.mapKeys { deserialize(it.key) }
+                .mapValues { it.value.map { key -> deserialize(key) } }
+            restoreBackStacks(restoredBackStacks)
+            
+            // Set the current top level key - this will also call updateBackStack
             if (topLevelKey != startKey) {
                 switchTopLevel(topLevelKey)
-            }
-
-            val savedBackStack =
-                state.topLevelBackStacks[state.topLevelKey]?.map { deserialize(it) }
-            if (savedBackStack != null && savedBackStack.size > 1) {
-                savedBackStack.drop(1).forEach { key ->
-                    add(key)
-                }
+            } else {
+                updateBackStack() // Still need to update if we're staying on start key
             }
         }
     }
