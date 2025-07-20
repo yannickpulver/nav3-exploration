@@ -188,11 +188,26 @@ internal class ListDetailScene<T : Any>(
         val lastDetail = entries.findLast { it.paneRole == ListDetailPaneScaffoldRole.Detail }
         val lastExtra = entries.findLast { it.paneRole == ListDetailPaneScaffoldRole.Extra }
         Column {
-            header?.invoke()
+            if (directive.maxHorizontalPartitions > 1) {
+                header?.invoke()
+            }
             ListDetailPaneScaffold(
                 directive = directive,
                 scaffoldState = scaffoldState,
-                listPane = lastList?.let { { AnimatedPane { it.Content() } } } ?: {},
+                listPane = lastList?.let {
+                    {
+                        AnimatedPane {
+                            if (directive.maxHorizontalPartitions == 1) {
+                                Column {
+                                    header?.invoke()
+                                    it.Content()
+                                }
+                            } else {
+                                it.Content()
+                            }
+                        }
+                    }
+                } ?: {},
                 detailPane = lastDetail?.let { { AnimatedPane { it.Content() } } }
                     ?: detailPlaceholder,
                 extraPane = lastExtra?.let { { AnimatedPane { it.Content() } } },
