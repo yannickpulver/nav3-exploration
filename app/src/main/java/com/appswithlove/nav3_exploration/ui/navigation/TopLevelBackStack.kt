@@ -12,28 +12,14 @@ import androidx.navigation3.runtime.NavKey
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
 
-class TopLevelBackStack<T : NavKey>(private val startKey: T) {
+class TopLevelBackStack<T : NavKey>(val startKey: T) {
 
-    private var topLevelBackStacks: HashMap<T, SnapshotStateList<T>> = hashMapOf(
-        startKey to mutableStateListOf(startKey)
-    )
+    val topLevelBackStacks: HashMap<T, SnapshotStateList<T>> = hashMapOf(startKey to mutableStateListOf(startKey))
 
     var topLevelKey by mutableStateOf(startKey)
         private set
 
     val backStack = mutableStateListOf<T>(startKey)
-
-    // Internal access for the saver
-    internal fun getStartKey(): T = startKey
-    internal fun getAllBackStacks(): Map<T, List<T>> =
-        topLevelBackStacks.mapValues { it.value.toList() }
-
-    internal fun restoreBackStacks(backStacks: Map<T, List<T>>) {
-        topLevelBackStacks.clear()
-        backStacks.forEach { (key, stack) ->
-            topLevelBackStacks[key] = mutableStateListOf<T>().apply { addAll(stack) }
-        }
-    }
 
     internal fun updateBackStack() {
         backStack.clear()
@@ -75,6 +61,13 @@ class TopLevelBackStack<T : NavKey>(private val startKey: T) {
         topLevelBackStacks[topLevelKey] = mutableStateListOf(*keys)
         updateBackStack()
     }
+
+    internal fun setBackStacks(backStacks: Map<T, List<T>>) {
+        topLevelBackStacks.clear()
+        backStacks.forEach { (key, stack) ->
+            topLevelBackStacks[key] = mutableStateListOf<T>().apply { addAll(stack) }
+        }
+    }
 }
 
 @Composable
@@ -97,10 +90,9 @@ fun <T : NavKey> topLevelBackStackSaver(
 ): Saver<TopLevelBackStack<T>, String> = Saver(
     save = { backStack ->
         val state = TopLevelBackStackState(
-            startKey = serialize(backStack.getStartKey()),
+            startKey = serialize(backStack.startKey),
             topLevelKey = serialize(backStack.topLevelKey),
-            topLevelBackStacks = backStack.getAllBackStacks().mapKeys { serialize(it.key) }
-                .mapValues { it.value.map { key -> serialize(key) } }
+            topLevelBackStacks = backStack.topLevelBackStacks.mapKeys { serialize(it.key) }.mapValues { it.value.map { key -> serialize(key) } }
         )
         Json.encodeToString(state)
     },
@@ -112,7 +104,7 @@ fun <T : NavKey> topLevelBackStackSaver(
         TopLevelBackStack(startKey).apply {
             val restoredBackStacks = state.topLevelBackStacks.mapKeys { deserialize(it.key) }
                 .mapValues { it.value.map { key -> deserialize(key) } }
-            restoreBackStacks(restoredBackStacks)
+            setBackStacks(restoredBackStacks)
 
             if (topLevelKey != startKey) {
                 switchTopLevel(topLevelKey)

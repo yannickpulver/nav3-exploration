@@ -14,6 +14,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.adaptive.ExperimentalMaterial3AdaptiveApi
+import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.ProvidableCompositionLocal
@@ -54,7 +55,9 @@ val LocalSharedTransitionScope: ProvidableCompositionLocal<SharedTransitionScope
     }
 
 @Composable
-@OptIn(ExperimentalSharedTransitionApi::class, ExperimentalMaterial3AdaptiveApi::class)
+@OptIn(ExperimentalSharedTransitionApi::class, ExperimentalMaterial3AdaptiveApi::class,
+    ExperimentalMaterial3Api::class
+)
 fun AppNavigation(viewModel: RouteViewModel = koinViewModel()) {
     val isLoggedIn by viewModel.state.collectAsStateWithLifecycle()
 
@@ -69,7 +72,8 @@ fun AppNavigation(viewModel: RouteViewModel = koinViewModel()) {
                     }
                 )
 
-            val overlaySceneStrategy = remember { OverlaySceneStrategy<Any>() }
+            val bottomSheetState = rememberModalBottomSheetState()
+            val overlaySceneStrategy = remember { OverlaySceneStrategy<Any>(bottomSheetState) }
             val listDetailSceneStrategy = rememberListDetailSceneStrategy<Any>()
             val sceneStrategy = remember { overlaySceneStrategy.then(listDetailSceneStrategy) }
 

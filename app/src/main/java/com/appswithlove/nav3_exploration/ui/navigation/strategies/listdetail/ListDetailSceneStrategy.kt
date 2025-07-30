@@ -101,7 +101,7 @@ public class ListDetailSceneStrategy<T : Any>(
             }
         }
         if (scaffoldEntries.isEmpty()) return null
-        val scene =
+        val scene = remember(entries) {
             ListDetailScene(
                 key = sceneKey,
                 onBack = onBack,
@@ -114,6 +114,7 @@ public class ListDetailSceneStrategy<T : Any>(
                 bottomBar = bottomBar ?: {},
                 header = header
             )
+        }
 
         if (scene.currentScaffoldValue.paneCount < 1) {
             return null

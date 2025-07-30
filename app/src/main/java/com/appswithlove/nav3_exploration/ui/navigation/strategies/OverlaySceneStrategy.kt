@@ -14,6 +14,8 @@
  * limitations under the License.
  */
 
+@file:OptIn(ExperimentalMaterial3Api::class)
+
 package com.appswithlove.nav3_exploration.ui.navigation.strategies
 
 import androidx.compose.foundation.layout.padding
@@ -21,8 +23,10 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
+import androidx.compose.material3.SheetState
 import androidx.compose.material3.Surface
 import androidx.compose.material3.adaptive.currentWindowAdaptiveInfo
+import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.material3.windowsizeclass.ExperimentalMaterial3WindowSizeClassApi
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
@@ -36,7 +40,7 @@ import androidx.navigation3.ui.SceneStrategy
 import androidx.window.core.layout.WindowSizeClass.Companion.WIDTH_DP_MEDIUM_LOWER_BOUND
 
 /** An [androidx.navigation3.ui.OverlayScene] that renders an [entry] within a [Dialog] or [ModalBottomSheet]. */
-internal class OverlayScene<T : Any>(
+internal class OverlayScene<T : Any> @OptIn(ExperimentalMaterial3Api::class) constructor(
     override val key: Any,
     override val previousEntries: List<NavEntry<T>>,
     override val overlaidEntries: List<NavEntry<T>>,
@@ -44,6 +48,7 @@ internal class OverlayScene<T : Any>(
     private val dialogProperties: DialogProperties,
     private val isTablet: Boolean,
     private val onBack: (count: Int) -> Unit,
+    private val bottomSheetState: SheetState,
 ) : OverlayScene<T> {
 
     override val entries: List<NavEntry<T>> = listOf(entry)
@@ -66,7 +71,7 @@ internal class OverlayScene<T : Any>(
                 }
             }
         } else {
-            ModalBottomSheet(onDismissRequest = { onBack(1) }) {
+            ModalBottomSheet(onDismissRequest = { onBack(1) }, sheetState = bottomSheetState) {
                 entry.Content()
             }
         }
@@ -79,8 +84,8 @@ internal class OverlayScene<T : Any>(
  *
  * This strategy should always be added before any non-overlay scene strategies.
  */
-public class OverlaySceneStrategy<T : Any>() : SceneStrategy<T> {
-    @OptIn(ExperimentalMaterial3WindowSizeClassApi::class)
+public class OverlaySceneStrategy<T : Any>(private val bottomSheetState: SheetState? = null) : SceneStrategy<T> {
+    @OptIn(ExperimentalMaterial3WindowSizeClassApi::class, ExperimentalMaterial3Api::class)
     @Composable
     public override fun calculateScene(
         entries: List<NavEntry<T>>,
@@ -100,6 +105,7 @@ public class OverlaySceneStrategy<T : Any>() : SceneStrategy<T> {
                 dialogProperties = properties,
                 isTablet = isTablet,
                 onBack = onBack,
+                bottomSheetState = bottomSheetState ?: rememberModalBottomSheetState()
             )
         }
     }

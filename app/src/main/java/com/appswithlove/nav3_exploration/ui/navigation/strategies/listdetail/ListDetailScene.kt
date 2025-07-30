@@ -163,6 +163,7 @@ internal class ListDetailScene<T : Any>(
         )
 
     override val content: @Composable () -> Unit = {
+        println("directive: $directive")
         val scaffoldValue = currentScaffoldValue
         val scaffoldState = remember { MutableThreePaneScaffoldState(scaffoldValue) }
         LaunchedEffect(scaffoldValue) { scaffoldState.animateTo(scaffoldValue) }
